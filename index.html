@@ -611,10 +611,12 @@ function rkSort(key) {
 }
 
 function sparkline(l, nMonths = 6) {
-  const vals = ALL_MONTHS_REV.slice(0, nMonths).reverse().map(m => l.ipk[m]);
-  const max = Math.max(...vals.filter(v => v != null), 1);
+  // most recent LEFT → oldest RIGHT (same logic as historical table)
+  const vals = ALL_MONTHS_REV.slice(0, nMonths).map(m => l.ipk[m]);
+  // Fixed scale: 0 to 4.0 IPK — height reflects absolute value
+  const SCALE_MAX = 4.0;
   return vals.map(v => {
-    const h = v != null ? Math.max(3, Math.round((v / max) * 16)) : 2;
+    const h = v != null ? Math.max(2, Math.round((v / SCALE_MAX) * 16)) : 2;
     const c = v == null ? '#E5E7EB' : v >= 1.2 ? '#16A34A' : v >= 1.0 ? '#F59E0B' : '#DC2626';
     return `<span style="height:${h}px;background:${c}"></span>`;
   }).join('');
@@ -651,13 +653,18 @@ function renderRanking() {
 
   document.getElementById('rk-cnt').textContent = rows.length + ' linhas';
 
-  // Alert banner
-  const alerts = rows.filter(l => l.alerta);
+  // All alerts (always from full dataset, not filtered rows)
+  const alerts = LINHAS.filter(l => consecDecline(l, 2));
+
+  // Alert banner — compact inline
   const az = document.getElementById('alert-zone');
   if (alerts.length) {
-    az.innerHTML = `<div class="alert-banner">
-      <strong>🚨 ${alerts.length} linha(s) em queda consecutiva</strong>
-      IPK caindo nos últimos 2 meses seguidos: ${alerts.map(l => `<strong>${l.linha}</strong>`).join(', ')}
+    const linhasTags = alerts.map(l =>
+      `<span style="background:#FEE2E2;color:#991B1B;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;white-space:nowrap">${l.linha}</span>`
+    ).join('');
+    az.innerHTML = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid #FECACA;border-left:4px solid #DC2626;border-radius:8px;padding:10px 14px;margin-bottom:14px">
+      <span style="font-size:12px;font-weight:700;color:#991B1B;white-space:nowrap">⚠ ${alerts.length} em queda consecutiva</span>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">${linhasTags}</div>
     </div>`;
   } else {
     az.innerHTML = '';
