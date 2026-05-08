@@ -161,6 +161,8 @@ footer{text-align:center;padding:18px 40px;font-size:10px;color:var(--t3);border
 @media(max-width:768px){header,main,nav,footer{padding-left:14px;padding-right:14px}.kg{grid-template-columns:1fr 1fr}.line-sel-grid{grid-template-columns:1fr}}
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 </head>
 <body>
 
@@ -227,6 +229,16 @@ footer{text-align:center;padding:18px 40px;font-size:10px;color:var(--t3);border
 
   <!-- Info cards — mês atual -->
   <div id="analise-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:4px"></div>
+  <!-- Mapa de trajeto -->
+  <div id="analise-mapa-wrap" style="margin-top:16px;display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:12px;font-weight:700;color:var(--tx)">🗺️ Trajeto no Mapa</div>
+      <div id="analise-mapa-btns" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+      <div id="analise-mapa-semtraj" style="display:none;font-size:11px;color:#92400E;background:#FEF9E7;border:1px solid #FDE68A;border-radius:6px;padding:4px 10px">Trajeto não disponível neste KML</div>
+    </div>
+    <div id="analise-mapa-container" style="height:420px;border-radius:12px;overflow:hidden;border:1px solid var(--bd)"></div>
+    <div style="margin-top:6px;font-size:10px;color:var(--t3)">Mapa via OpenStreetMap · Linhas com trajeto: 45 de 72</div>
+  </div>
 </div>
 
 <!-- ══════════════ RANKING ══════════════ -->
@@ -285,6 +297,7 @@ footer{text-align:center;padding:18px 40px;font-size:10px;color:var(--t3);border
     <table class="ht" id="ht-table"></table>
   </div>
 </div>
+
 
 </main>
 <footer>EXPRESSO UNIR · GESTÃO IPK · 2026 · Dados do sistema de passageiros</footer>
@@ -359,7 +372,7 @@ function tab(id, btn) {
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + id).classList.add('active');
   btn.classList.add('active');
-  if (id === 'analise')   renderAnalise();
+  if (id === 'analise') { renderAnalise(); }
   if (id === 'ranking')   renderRanking();
   if (id === 'historico') renderHistorico();
 }
@@ -587,6 +600,7 @@ function renderAnalise() {
   }).join('');
 
   cards.innerHTML = cardHTML;
+  updateAnaliseMap();
 }
 
 // ══════════════════════════════════════════
@@ -771,6 +785,94 @@ function renderHistorico() {
 // ══════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════
+
+// ══ MAPA INTEGRADO NA ANÁLISE ══
+var analiseMap = null;
+var analiseMapLayers = [];
+var TRAJETOS = null;
+var analiseMapInited = false;
+
+function loadTrajetos(cb) {
+  if (TRAJETOS !== null) { cb(); return; }
+  fetch('trajetos.json')
+    .then(function(r) { if (!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(d) { TRAJETOS = d; cb(); })
+    .catch(function(e) { console.warn('trajetos.json:', e); TRAJETOS = {}; cb(); });
+}
+
+function initAnaliseMap() {
+  if (analiseMapInited) return;
+  var container = document.getElementById('analise-mapa-container');
+  if (!container) return;
+  analiseMapInited = true;
+  analiseMap = L.map(container).setView([-19.73, -44.04], 11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: 'OpenStreetMap', maxZoom: 18
+  }).addTo(analiseMap);
+}
+
+function updateAnaliseMap() {
+  loadTrajetos(function() {
+    var ids = [
+      document.getElementById('sel1') ? document.getElementById('sel1').value : '',
+      document.getElementById('sel2') ? document.getElementById('sel2').value : '',
+      document.getElementById('sel3') ? document.getElementById('sel3').value : ''
+    ].filter(Boolean);
+
+    var wrap = document.getElementById('analise-mapa-wrap');
+    if (!wrap) return;
+    wrap.style.display = ids.length ? 'block' : 'none';
+    if (!ids.length) return;
+
+    initAnaliseMap();
+    setTimeout(function() { if (analiseMap) analiseMap.invalidateSize(); }, 120);
+
+    analiseMapLayers.forEach(function(l) { analiseMap.removeLayer(l); });
+    analiseMapLayers = [];
+    var btnsDiv = document.getElementById('analise-mapa-btns');
+    var semTraj = document.getElementById('analise-mapa-semtraj');
+    if (btnsDiv) btnsDiv.innerHTML = '';
+    if (semTraj) semTraj.style.display = 'none';
+
+    var allBounds = [];
+    var anyTraj = false;
+
+    ids.forEach(function(id, colorIdx) {
+      var trajs = TRAJETOS[id] || [];
+      if (!trajs.length) return;
+      anyTraj = true;
+      var color = LINE_COLORS[colorIdx % LINE_COLORS.length];
+      trajs.forEach(function(t, ti) {
+        var c = ti === 0 ? color : color + 'AA';
+        var layer = L.polyline(t.coords, { color: color, weight: ti === 0 ? 5 : 3, opacity: 0.85, dashArray: ti === 0 ? null : '8,4' })
+          .addTo(analiseMap)
+          .bindTooltip('<strong>' + id + '</strong> ' + t.name, { sticky: true });
+        analiseMapLayers.push(layer);
+        allBounds = allBounds.concat(t.coords);
+        if (btnsDiv) {
+          var btn = document.createElement('button');
+          btn.className = 'pbtn active';
+          btn.style.cssText = 'background:' + color + ';border-color:' + color + ';color:#fff;font-size:10px';
+          btn.textContent = id + (trajs.length > 1 ? ' (' + (ti === 0 ? 'Ida' : 'Volta') + ')' : '');
+          var vis = true;
+          btn.onclick = (function(lyr, b) { return function() {
+            vis = !vis;
+            if (vis) { lyr.addTo(analiseMap); b.style.opacity='1'; }
+            else { analiseMap.removeLayer(lyr); b.style.opacity='0.4'; }
+          }; })(layer, btn);
+          btnsDiv.appendChild(btn);
+        }
+      });
+    });
+
+    if (!anyTraj && semTraj) semTraj.style.display = 'block';
+    if (allBounds.length) {
+      try { analiseMap.fitBounds(L.latLngBounds(allBounds), { padding: [24, 24] }); }
+      catch(e) {}
+    }
+  });
+}
+
 renderDashboard();
 buildLineSelectors();
 </script>
