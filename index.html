@@ -837,8 +837,10 @@ function updateAnaliseMap() {
     var allBounds = [];
     var anyTraj = false;
 
+    console.log("IDs:", ids, "TRAJETOS keys:", Object.keys(TRAJETOS).slice(0,5));
     ids.forEach(function(id, colorIdx) {
       var trajs = TRAJETOS[id] || [];
+      console.log("Linha", id, "trajs:", trajs.length);
       if (!trajs.length) return;
       anyTraj = true;
       var color = LINE_COLORS[colorIdx % LINE_COLORS.length];
