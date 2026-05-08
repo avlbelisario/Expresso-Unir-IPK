@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestão IPK · Expresso Unir</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --or:#E8711A;--orL:#FFF0E6;--orM:#FDDCBF;
+  --az:#2B3A8C;--azL:#EEF1FF;
+  --bg:#F5F6FA;--sf:#fff;--bd:#E8EAEF;
+  --tx:#1A1D2E;--t2:#4A5068;--t3:#9198B4;
+  --ok:#16A34A;--okB:#DCFCE7;
+  --wn:#DC2626;--wnB:#FEE2E2;
+  --meta:#F59E0B;--metaB:#FEF3C7;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--tx);font-family:'Outfit',sans-serif;min-height:100vh}
+
+/* ── HEADER ── */
+header{background:#fff;border-bottom:1px solid var(--bd);padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:68px;position:sticky;top:0;z-index:100;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.logo{display:flex;align-items:center;gap:12px}
+.logo img{height:44px;object-fit:contain}
+.logo-fb{display:none;width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--or),var(--az));align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:14px}
+.logo h1{font-size:16px;font-weight:700}
+.logo p{font-size:11px;color:var(--t3);margin-top:1px}
+.mbadge{background:var(--orL);color:var(--or);font-size:12px;font-weight:600;padding:5px 14px;border-radius:20px;border:1px solid var(--orM)}
+
+/* ── NAV ── */
+nav{background:#fff;border-bottom:1px solid var(--bd);padding:0 40px;display:flex;overflow-x:auto}
+nav button{padding:13px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--t3);cursor:pointer;font:500 12px 'Outfit',sans-serif;transition:all .2s;white-space:nowrap}
+nav button.active{color:var(--or);border-bottom-color:var(--or);font-weight:600}
+
+/* ── MAIN ── */
+main{padding:24px 40px}
+.tp{display:none}.tp.active{display:block}
+
+/* ── KPI CARDS ── */
+.kg{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px}
+.kpi{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:18px 16px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--kc,var(--or))}
+.kl{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--t3);font-weight:600;margin-bottom:8px}
+.kv{font-size:26px;font-weight:700;line-height:1;font-family:'DM Mono',monospace}
+.kv .u{font-size:11px;font-weight:400;color:var(--t3);margin-left:3px;font-family:'Outfit',sans-serif}
+.ks{font-size:11px;color:var(--t3);margin-top:5px}
+
+/* ── SECTION TITLE ── */
+.st{font-size:13px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.st::after{content:'';flex:1;height:1px;background:var(--bd)}
+
+/* ── GROUPS SEPARATOR ── */
+.grp-sep{padding:6px 14px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin:4px 0;display:flex;align-items:center;gap:8px}
+.grp-rod{background:#F3E8FF;color:#6B21A8}
+.grp-vesp{background:#E0F2FE;color:#075985}
+.grp-mpl{background:#DCFCE7;color:#166534}
+.grp-met{background:#FEF3C7;color:#92400E}
+
+/* ── TABLE ── */
+.tw{overflow-x:auto;background:#fff;border:1px solid var(--bd);border-radius:12px;margin-bottom:24px}
+table{width:100%;border-collapse:collapse}
+thead th{padding:9px 12px;text-align:left;background:#FAFBFD;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--t3);font-weight:600;border-bottom:1px solid var(--bd);cursor:pointer;white-space:nowrap;user-select:none}
+thead th:hover{color:var(--or)}
+thead th.sorted{color:var(--or)}
+tbody tr{border-bottom:1px solid #F3F4F8;transition:background .1s}
+tbody tr:hover{background:#FAFBFD}
+tbody tr:last-child{border-bottom:none}
+tbody tr.sep-row td{padding:4px 12px;background:#FAFBFD;border-bottom:1px solid var(--bd)}
+td{padding:9px 12px;font-size:12px;color:var(--t2);white-space:nowrap}
+.tf2{font-weight:700;color:var(--tx);font-family:'DM Mono',monospace}
+
+/* ── PILLS ── */
+.pill{display:inline-flex;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+.p-ok{background:var(--okB);color:var(--ok)}
+.p-wn{background:var(--wnB);color:var(--wn)}
+.p-meta{background:var(--metaB);color:#92400E}
+.p-gy{background:#F3F4F6;color:var(--t3)}
+.p-alert{background:#FEE2E2;color:#991B1B;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.2)}50%{box-shadow:0 0 0 4px rgba(220,38,38,0)}}
+
+/* ── IPK COLOR BADGE ── */
+.ipk-ok{color:var(--ok);font-weight:700;font-family:'DM Mono',monospace}
+.ipk-meta{color:#D97706;font-weight:700;font-family:'DM Mono',monospace}
+.ipk-wn{color:var(--wn);font-weight:700;font-family:'DM Mono',monospace}
+.ipk-nd{color:var(--t3);font-family:'DM Mono',monospace}
+
+/* ── TREND SPARKLINE ── */
+.spark{display:inline-flex;align-items:flex-end;gap:1px;height:18px;vertical-align:middle}
+.spark span{width:3px;border-radius:1px;display:inline-block}
+
+/* ── FILTERS ── */
+.fc{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.si{background:#fff;border:1px solid var(--bd);border-radius:8px;padding:8px 12px;color:var(--tx);font:400 13px 'Outfit',sans-serif;outline:none;flex:1;min-width:160px}
+.si:focus{border-color:var(--or)}
+.fs{background:#fff;border:1px solid var(--bd);border-radius:8px;padding:8px 26px 8px 10px;color:var(--t2);font:400 12px 'Outfit',sans-serif;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%239198B4' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;background-size:10px}
+.fs:focus{border-color:var(--or)}
+.cnt{font-size:11px;color:var(--t3);background:#fff;border:1px solid var(--bd);padding:5px 10px;border-radius:6px;white-space:nowrap}
+
+/* ── CHART PANEL ── */
+.chart-box{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:20px;margin-bottom:20px}
+.chart-title{font-size:12px;font-weight:700;color:var(--tx);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.chart-wrap{position:relative;height:280px}
+
+/* ── LINE SELECTOR ── */
+.line-sel-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+.line-sel-box{background:#fff;border:1px solid var(--bd);border-radius:10px;padding:12px}
+.line-sel-box label{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px}
+.line-sel-box select{width:100%;border:1px solid var(--bd);border-radius:6px;padding:7px 8px;font:400 12px 'Outfit',sans-serif;color:var(--tx);outline:none;background:#fff}
+.line-sel-box select:focus{border-color:var(--or)}
+.period-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.pbtn{padding:5px 14px;border-radius:20px;border:1px solid var(--bd);background:#fff;color:var(--t2);font:500 11px 'Outfit',sans-serif;cursor:pointer;transition:all .15s}
+.pbtn.active{background:var(--or);color:#fff;border-color:var(--or)}
+
+/* ── METRIC TABS ── */
+.metric-tabs{display:flex;gap:6px;margin-bottom:12px}
+.mtab{padding:5px 12px;border-radius:6px;border:1px solid var(--bd);background:#fff;color:var(--t2);font:500 11px 'Outfit',sans-serif;cursor:pointer;transition:all .15s}
+.mtab.active{background:var(--az);color:#fff;border-color:var(--az)}
+
+/* ── LEGEND ── */
+.leg{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;font-size:11px;color:var(--t2)}
+.leg-item{display:flex;align-items:center;gap:5px}
+.leg-dot{width:10px;height:10px;border-radius:50%}
+.leg-line{width:16px;height:2px;border-radius:1px}
+
+/* ── DASHBOARD BARS ── */
+.bar-chart-wrap{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:20px;margin-bottom:24px;max-height:600px;overflow-y:auto}
+.bar-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #F8F9FA}
+.bar-row:last-child{border-bottom:none}
+.bar-label{font-size:10px;font-weight:600;color:var(--t2);width:52px;flex-shrink:0;text-align:right;font-family:'DM Mono',monospace}
+.bar-name{font-size:10px;color:var(--t3);width:200px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{flex:1;height:14px;background:#F3F4F6;border-radius:3px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.bar-val{font-size:10px;font-weight:700;width:36px;flex-shrink:0;text-align:right;font-family:'DM Mono',monospace}
+.meta-mark{position:absolute;top:0;bottom:0;width:2px;background:rgba(0,0,0,.2);z-index:1}
+
+/* ── ALERT BOX ── */
+.alert-banner{background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:12px;color:#991B1B}
+.alert-banner strong{display:block;margin-bottom:4px;font-size:13px}
+
+/* ── HIST TABLE ── */
+.ht{width:100%;border-collapse:collapse}
+.ht th{padding:8px 12px;text-align:center;font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:var(--t3);font-weight:600;border-bottom:1px solid var(--bd);background:#FAFBFD;white-space:nowrap}
+.ht th:first-child,.ht th:nth-child(2){text-align:left}
+.ht td{padding:7px 12px;text-align:center;font-family:'DM Mono',monospace;font-size:11px;border-bottom:1px solid #F3F4F8}
+.ht td:first-child{text-align:left;font-family:'Outfit',sans-serif;font-weight:700;color:var(--tx);font-size:11px}
+.ht td:nth-child(2){text-align:left;font-family:'Outfit',sans-serif;font-size:11px;color:var(--t2)}
+.ht tr.sep-hist td{background:#FAFBFD;font-family:'Outfit',sans-serif;font-weight:700;font-size:10px;letter-spacing:.5px;text-transform:uppercase;padding:6px 12px;color:var(--t2);border-bottom:1px solid var(--bd)}
+.ht tr:last-child td{border-bottom:none}
+.ci-ok{background:#DCFCE7;color:#166534;font-weight:700;border-radius:3px}
+.ci-meta{background:#FEF3C7;color:#92400E;font-weight:700;border-radius:3px}
+.ci-wn{background:#FEE2E2;color:#991B1B;font-weight:700;border-radius:3px}
+.ci-nd{color:var(--t3)}
+.yr-26{background:#F3E8FF}
+.yr-25{background:#F0FFF4}
+.yr-avg{background:#EBF5FB}
+.yr-avg2{background:#FEF9E7}
+
+footer{text-align:center;padding:18px 40px;font-size:10px;color:var(--t3);border-top:1px solid var(--bd);background:#fff;margin-top:16px;letter-spacing:.5px}
+@media(max-width:768px){header,main,nav,footer{padding-left:14px;padding-right:14px}.kg{grid-template-columns:1fr 1fr}.line-sel-grid{grid-template-columns:1fr}}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <img src="Logo separada.png" alt="Expresso Unir" onerror="this.style.display='none';document.getElementById('logo-fb').style.display='flex'">
+    <div class="logo-fb" id="logo-fb">EU</div>
+    <div><h1>Expresso Unir</h1><p>Gestão de Passageiros · IPK</p></div>
+  </div>
+  <div class="mbadge" id="hbadge">Março 2026</div>
+</header>
+
+<nav>
+  <button class="active" onclick="tab('dashboard',this)">📊 Dashboard</button>
+  <button onclick="tab('analise',this)">📈 Análise por Linha</button>
+  <button onclick="tab('ranking',this)">🏆 Ranking & Alertas</button>
+  <button onclick="tab('historico',this)">📋 Histórico Completo</button>
+</nav>
+
+<main>
+
+<!-- ══════════════ DASHBOARD ══════════════ -->
+<div class="tp active" id="tab-dashboard">
+  <div class="kg" id="kpi-grid"></div>
+  <div class="st">Todas as Linhas — IPK Março 2026 (maior → menor)</div>
+  <div id="dash-bars"></div>
+</div>
+
+<!-- ══════════════ ANÁLISE ══════════════ -->
+<div class="tp" id="tab-analise">
+  <div class="line-sel-grid">
+    <div class="line-sel-box">
+      <label>🔵 Linha 1</label>
+      <select id="sel1" onchange="renderAnalise()"></select>
+    </div>
+    <div class="line-sel-box">
+      <label>🟠 Linha 2 (opcional)</label>
+      <select id="sel2" onchange="renderAnalise()"><option value="">— Nenhuma —</option></select>
+    </div>
+    <div class="line-sel-box">
+      <label>🟢 Linha 3 (opcional)</label>
+      <select id="sel3" onchange="renderAnalise()"><option value="">— Nenhuma —</option></select>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;flex-wrap:wrap">
+    <div>
+      <span style="font-size:11px;color:var(--t3);font-weight:600;margin-right:6px">PERÍODO:</span>
+      <span class="period-btns" style="display:inline-flex">
+        <button class="pbtn" onclick="setPeriod(6,this)">6 meses</button>
+        <button class="pbtn active" onclick="setPeriod(15,this)">12 meses</button>
+        <button class="pbtn" onclick="setPeriod(38,this)">Tudo</button>
+      </span>
+    </div>
+  </div>
+  <div class="leg" id="analise-leg"></div>
+
+  <div class="chart-box">
+    <div class="chart-title">
+      <span>📈 Evolução do IPK</span>
+      <span style="font-size:10px;color:var(--t3)">Linha tracejada = meta mínima (1,0)</span>
+    </div>
+    <div class="chart-wrap"><canvas id="chart-ipk"></canvas></div>
+  </div>
+
+  <!-- Info cards — mês atual -->
+  <div id="analise-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:4px"></div>
+</div>
+
+<!-- ══════════════ RANKING ══════════════ -->
+<div class="tp" id="tab-ranking">
+  <div id="alert-zone"></div>
+  <div class="fc">
+    <input class="si" type="text" id="rk-search" placeholder="Buscar linha ou nome..." oninput="renderRanking()">
+    <select class="fs" id="rk-grupo" onchange="renderRanking()">
+      <option value="">Todos os grupos</option>
+      <option>RODOVIÁRIO</option>
+      <option>MUNICIPAL VESPASIANO</option>
+      <option>MUNICIPAL PEDRO LEOPOLDO</option>
+      <option>METROPOLITANO</option>
+    </select>
+    <select class="fs" id="rk-status" onchange="renderRanking()">
+      <option value="">Todos os status</option>
+      <option value="ok">✅ Saudável (≥ 1,2)</option>
+      <option value="meta">🟡 Na meta (1,0–1,2)</option>
+      <option value="baixo">🔴 Abaixo da meta</option>
+      <option value="alerta">🚨 Em queda consecutiva</option>
+    </select>
+    <div class="cnt" id="rk-cnt">—</div>
+  </div>
+  <div class="tw">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="rkSort('linha')">Linha</th>
+          <th onclick="rkSort('nome')">Nome</th>
+          <th>Grupo</th>
+          <th onclick="rkSort('ipk_atual')">IPK Mar/26</th>
+          <th onclick="rkSort('ipk_ant')">IPK Fev/26</th>
+          <th>Δ Mês</th>
+          <th>Tendência</th>
+          <th>Status</th>
+          <th>Alerta</th>
+        </tr>
+      </thead>
+      <tbody id="rk-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════ HISTÓRICO ══════════════ -->
+<div class="tp" id="tab-historico">
+  <div class="fc">
+    <input class="si" type="text" id="ht-search" placeholder="Filtrar linha..." oninput="renderHistorico()" style="max-width:240px">
+    <div style="font-size:11px;color:var(--t3);padding:6px 10px">
+      <span style="background:#F3E8FF;padding:2px 8px;border-radius:4px;margin-right:4px">2026</span>
+      <span style="background:#F0FFF4;padding:2px 8px;border-radius:4px;margin-right:4px">2025</span>
+      <span style="background:#EBF5FB;padding:2px 8px;border-radius:4px;margin-right:4px">2024 méd.</span>
+      <span style="background:#FEF9E7;padding:2px 8px;border-radius:4px">2023 méd.</span>
+    </div>
+  </div>
+  <div class="tw">
+    <table class="ht" id="ht-table"></table>
+  </div>
+</div>
+
+</main>
+<footer>EXPRESSO UNIR · GESTÃO IPK · 2026 · Dados do sistema de passageiros</footer>
+
+<script>
+// ══════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════
+const RAW = {"meta":{"empresa":"Expresso Unir","painel":"Gestão IPK","mes_atual":"2026-03","mes_label":"Março 2026","ipk_meta":1.0,"ipk_saudavel":1.2,"total_linhas":72,"meses_disponiveis":["2023-01","2023-02","2023-03","2023-04","2023-05","2023-06","2023-07","2023-08","2023-10","2023-11","2023-12","2024-01","2024-02","2024-03","2024-04","2024-05","2024-06","2024-07","2024-08","2024-09","2024-10","2024-11","2024-12","2025-01","2025-02","2025-03","2025-04","2025-05","2025-06","2025-07","2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03"]},"linhas":[{"linha":"5240","nome":"Aeroporto de Confins / Belo Horizonte Executivo","grupo":"RODOVIÁRIO","km":42.45,"ipk":{"2026-03":0.25,"2026-02":0.23,"2026-01":0.22,"2025-12":0.29,"2025-11":0.29,"2025-10":0.27,"2025-09":0.26,"2025-08":0.33,"2025-07":0.24,"2025-06":0.27,"2025-05":0.25,"2025-04":0.25,"2025-03":0.23,"2025-02":0.22,"2025-01":0.22,"2024-12":0.25,"2024-11":0.26,"2024-10":0.29,"2024-09":0.31,"2024-08":0.27,"2024-07":0.24,"2024-06":0.25,"2024-05":0.27,"2024-04":0.26,"2024-03":0.25,"2024-02":0.22,"2024-01":0.24,"2023-12":0.28,"2023-11":0.29,"2023-10":0.29,"2023-08":0.29,"2023-07":0.28,"2023-06":0.2,"2023-05":0.29,"2023-04":0.28,"2023-03":0.22,"2023-02":0.22,"2023-01":0.26},"atual":{"mes":"2026-03","ipk":0.25,"pagantes":7674,"gratuidade":null,"total_pass":7674,"receita":379946.2,"km_total":30648.9}},{"linha":"5241","nome":"Aeroporto de Confins / Belo Horizonte Semi Expresso","grupo":"RODOVIÁRIO","km":43.1,"ipk":{"2026-03":0.44,"2026-02":0.47,"2026-01":0.49,"2025-12":0.56,"2025-11":0.52,"2025-10":0.53,"2025-09":0.53,"2025-08":0.66,"2025-07":0.47,"2025-06":0.48,"2025-05":0.45,"2025-04":0.42,"2025-03":0.43,"2025-02":0.39,"2025-01":0.45,"2024-12":0.48,"2024-11":0.44,"2024-10":0.5,"2024-09":0.54,"2024-08":0.47,"2024-07":0.44,"2024-06":0.42,"2024-05":0.48,"2024-04":0.47,"2024-03":0.41,"2024-02":0.37,"2024-01":0.4,"2023-12":0.45,"2023-11":0.4,"2023-10":0.42,"2023-08":0.38,"2023-07":0.39,"2023-06":0.27,"2023-05":0.33,"2023-04":0.36,"2023-03":0.33,"2023-02":0.31,"2023-01":0.28},"atual":{"mes":"2026-03","ipk":0.44,"pagantes":12640,"gratuidade":null,"total_pass":12640,"receita":380546.9,"km_total":28833.9}},{"linha":"5242","nome":"Aeroporto de Confins / Belo Horizonte Semi Expresso CM","grupo":"RODOVIÁRIO","km":43.8,"ipk":{"2026-03":0.62,"2026-02":0.66,"2026-01":0.68,"2025-12":0.69,"2025-11":0.77,"2025-10":0.68,"2025-09":0.62,"2025-08":0.8,"2025-07":0.69,"2025-06":0.7,"2025-05":0.64,"2025-04":0.61,"2025-03":0.58},"atual":{"mes":"2026-03","ipk":0.62,"pagantes":1201,"gratuidade":null,"total_pass":1201,"receita":35986.25,"km_total":1927.2}},{"linha":"5250","nome":"Aeroporto de Confins / Belo Horizonte Convencional","grupo":"RODOVIÁRIO","km":42.95,"ipk":{"2026-03":0.51,"2026-02":0.52,"2026-01":0.57,"2025-12":0.6,"2025-11":0.55,"2025-10":0.55,"2025-09":0.54,"2025-08":0.7,"2025-07":0.54,"2025-06":0.53,"2025-05":0.51,"2025-04":0.48,"2025-03":0.47,"2025-02":0.43,"2025-01":0.51,"2024-12":0.52,"2024-11":0.49,"2024-10":0.53,"2024-09":0.53,"2024-08":0.52,"2024-07":0.52,"2024-06":0.49,"2024-05":0.48,"2024-04":0.48,"2024-03":0.46,"2024-02":0.46,"2024-01":0.53,"2023-12":0.55,"2023-11":0.52,"2023-10":0.53,"2023-08":0.54,"2023-07":0.59,"2023-06":0.38,"2023-05":0.54,"2023-04":0.54,"2023-03":0.5,"2023-02":0.51,"2023-01":0.54},"atual":{"mes":"2026-03","ipk":0.51,"pagantes":28689,"gratuidade":null,"total_pass":28689,"receita":634053.4,"km_total":56565.15}},{"linha":"5260","nome":"Aerop. Int. Tancredo Neves / Belo Horizonte via Av. Cristiano Macha.","grupo":"RODOVIÁRIO","km":42.45,"ipk":{"2026-03":0.17},"atual":{"mes":"2026-03","ipk":0.17,"pagantes":85,"gratuidade":null,"total_pass":85,"receita":4207.5,"km_total":509.4}},{"linha":"5270","nome":"Aeroporto de Confins / Belo Horizonte Convencional CM","grupo":"RODOVIÁRIO","km":42.95,"ipk":{"2026-03":0.45,"2026-02":0.46,"2026-01":0.48,"2025-12":0.49,"2025-11":0.5,"2025-10":0.5,"2025-09":0.49,"2025-08":0.68,"2025-07":0.43,"2025-06":0.53,"2025-05":0.42,"2025-04":0.39,"2025-03":0.37,"2025-02":0.39,"2025-01":0.4,"2024-12":0.42,"2024-11":0.41,"2024-10":0.46,"2024-09":0.42,"2024-08":0.44,"2024-07":0.43,"2024-06":0.34,"2024-05":0.39,"2024-04":0.36,"2024-03":0.33,"2024-02":0.26,"2024-01":0.31,"2023-12":0.35,"2023-11":0.29,"2023-10":0.32,"2023-08":0.41,"2023-07":0.41,"2023-06":0.31,"2023-05":0.47,"2023-04":0.42,"2023-03":0.43,"2023-02":0.42,"2023-01":0.47},"atual":{"mes":"2026-03","ipk":0.45,"pagantes":1619,"gratuidade":null,"total_pass":1619,"receita":32616.1,"km_total":3607.8}},{"linha":"5291","nome":"Pedro Leopoldo / Belo Horizonte Semi Expresso","grupo":"RODOVIÁRIO","km":41.59,"ipk":{"2026-03":0.83,"2026-02":0.72,"2026-01":0.74,"2025-12":0.64,"2025-11":0.77,"2025-10":0.74,"2025-09":0.73,"2025-08":0.97,"2025-07":0.74,"2025-06":0.74,"2025-05":0.66,"2025-04":0.68,"2025-03":0.66,"2025-02":0.71,"2025-01":0.64,"2024-12":0.46,"2024-11":0.66,"2024-10":0.64,"2024-09":0.65,"2024-08":0.64,"2024-07":0.58,"2024-06":0.62,"2024-05":0.8,"2024-04":0.52,"2024-03":0.62,"2024-02":0.63,"2024-01":0.6,"2023-12":0.6,"2023-11":0.57,"2023-10":0.63,"2023-08":0.53,"2023-07":0.57,"2023-06":0.65,"2023-05":0.56,"2023-04":0.55,"2023-03":0.39,"2023-02":0.53,"2023-01":0.53},"atual":{"mes":"2026-03","ipk":0.83,"pagantes":4560,"gratuidade":null,"total_pass":4560,"receita":130872.0,"km_total":5489.88}},{"linha":"114","nome":"Vespasiano / Bela Vista via MG-010","grupo":"MUNICIPAL VESPASIANO","km":45.0,"ipk":{"2026-03":0.78,"2026-02":0.67,"2026-01":0.63,"2025-12":0.54,"2025-11":0.59,"2025-10":0.62,"2025-07":0.78,"2025-06":0.46,"2025-05":0.76,"2025-04":0.38,"2025-03":0.3,"2025-02":0.33,"2025-01":0.29,"2024-12":0.31,"2024-11":0.35,"2024-10":0.37,"2024-09":0.39,"2024-08":0.42,"2024-07":0.44,"2024-06":0.42,"2024-05":0.43,"2024-04":0.5,"2024-03":0.43,"2024-02":0.39,"2024-01":0.38,"2023-12":0.31,"2023-11":0.39,"2023-10":0.4,"2023-08":0.34,"2023-07":0.38,"2023-06":0.35,"2023-05":0.32,"2023-04":0.35,"2023-03":0.36,"2023-02":0.34,"2023-01":0.35},"atual":{"mes":"2026-03","ipk":0.78,"pagantes":4568,"gratuidade":1165,"total_pass":5733,"receita":11420.0,"km_total":7357.5}},{"linha":"100","nome":"Pedro Leopoldo / Vera Cruz","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":27.7,"ipk":{"2026-03":1.62,"2026-02":1.59,"2026-01":1.47,"2025-12":1.47,"2024-12":1.24,"2024-11":1.41,"2024-10":1.41,"2024-09":1.42,"2024-08":1.42,"2024-07":1.47,"2024-06":1.52,"2024-05":1.47,"2024-04":1.54,"2024-03":1.44,"2024-02":1.41,"2024-01":1.39,"2023-12":1.32,"2023-11":1.47,"2023-10":1.44,"2023-08":1.45,"2023-07":1.45,"2023-06":1.45,"2023-05":1.55,"2023-04":1.52,"2023-03":1.59,"2023-02":1.47,"2023-01":1.48},"atual":{"mes":"2026-03","ipk":1.62,"pagantes":13697,"gratuidade":2412,"total_pass":16109,"receita":38415.0,"km_total":9972.0}},{"linha":"101","nome":"Pedro Leopoldo / Vera Cruz via Jardinópolis","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":29.4,"ipk":{"2026-03":1.03,"2026-02":1.07,"2026-01":1.01,"2025-12":1.1},"atual":{"mes":"2026-03","ipk":1.03,"pagantes":2800,"gratuidade":791,"total_pass":3591,"receita":7776.0,"km_total":3498.6}},{"linha":"102","nome":"Pedro Leopoldo / Vera Cruz via Praça","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":27.1,"ipk":{"2026-03":1.71,"2026-02":1.57},"atual":{"mes":"2026-03","ipk":1.71,"pagantes":4751,"gratuidade":1049,"total_pass":5800,"receita":13854.0,"km_total":3387.5}},{"linha":"110","nome":"Pedro Leopoldo / Vera Cruz via Coqueirinho","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":28.5,"ipk":{"2026-03":1.39,"2026-02":1.1,"2026-01":1.03,"2025-12":1.34,"2025-11":1.48,"2025-10":1.45,"2025-07":0.88,"2025-06":0.65,"2025-05":0.62,"2025-04":0.65,"2025-03":0.59,"2025-02":0.62,"2025-01":0.72,"2024-12":0.51,"2024-11":0.81,"2024-10":0.63,"2024-09":0.52,"2024-08":0.83,"2024-07":0.38,"2024-06":0.5,"2024-05":0.67,"2024-04":0.8,"2024-03":0.62,"2024-02":0.59,"2024-01":0.5,"2023-12":0.7,"2023-11":1.06,"2023-10":0.95,"2023-08":0.58,"2023-07":0.33,"2023-06":0.36,"2023-05":0.31,"2023-04":0.61,"2023-03":0.73,"2023-02":0.41,"2023-01":0.33},"atual":{"mes":"2026-03","ipk":1.39,"pagantes":3468,"gratuidade":609,"total_pass":4077,"receita":10190.0,"km_total":2935.5}},{"linha":"111","nome":"Pedro Leopoldo / Vera Cruz via Coqueirinho atc Ferreira","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":44.9,"ipk":{"2025-12":0.72,"2025-11":0.65,"2025-10":0.66},"atual":{"mes":"2026-03","ipk":null,"pagantes":null,"gratuidade":null,"total_pass":null,"receita":null,"km_total":null}},{"linha":"120","nome":"Pedro Leopoldo / Ferreira","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":14.7,"ipk":{"2026-03":2.45,"2026-02":2.24,"2026-01":1.82,"2025-12":2.29,"2025-11":2.34,"2025-10":2.38,"2025-07":2.39,"2025-06":1.83,"2025-05":1.82,"2025-04":1.89,"2025-03":1.69,"2025-02":1.74,"2025-01":1.56,"2024-12":1.63,"2024-11":2.0,"2024-10":1.85,"2024-09":1.92,"2024-08":1.78,"2024-07":1.72,"2024-06":1.99,"2024-05":1.92,"2024-04":2.06,"2024-03":2.12,"2024-02":2.17,"2024-01":2.18,"2023-12":2.29,"2023-11":2.18,"2023-10":1.92,"2023-08":2.24,"2023-07":2.33,"2023-06":2.25,"2023-05":2.29,"2023-04":2.28,"2023-03":2.44,"2023-02":2.34,"2023-01":2.06},"atual":{"mes":"2026-03","ipk":2.45,"pagantes":2835,"gratuidade":337,"total_pass":3172,"receita":8505.0,"km_total":1293.6}},{"linha":"121","nome":"Pedro Leopoldo / Ferreira via Jardinópolis","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":16.4,"ipk":{"2026-03":1.7,"2026-02":1.99,"2026-01":2.05,"2025-12":2.27,"2025-11":2.35,"2025-10":2.57},"atual":{"mes":"2026-03","ipk":1.7,"pagantes":573,"gratuidade":42,"total_pass":615,"receita":1719.0,"km_total":360.8}},{"linha":"130","nome":"Pedro Leopoldo / Manoel Brandão","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":37.1,"ipk":{"2026-03":0.51,"2026-02":0.36,"2026-01":0.33,"2025-12":0.33,"2025-11":0.4,"2025-10":0.43,"2025-07":0.33,"2025-06":0.18,"2025-05":0.15,"2025-04":0.2,"2025-03":0.17,"2025-02":0.11,"2024-12":0.21,"2024-11":0.21,"2024-10":0.12,"2024-09":0.13,"2024-08":0.13,"2024-07":0.08,"2024-06":0.06,"2024-05":0.12,"2024-04":0.13,"2024-03":0.07,"2024-02":0.09,"2024-01":0.11,"2023-12":0.17,"2023-11":0.19,"2023-10":0.22,"2023-08":0.16,"2023-07":0.12,"2023-06":0.08,"2023-05":0.08,"2023-04":0.03,"2023-03":0.05,"2023-02":0.03,"2023-01":0.01},"atual":{"mes":"2026-03","ipk":0.51,"pagantes":396,"gratuidade":133,"total_pass":529,"receita":1188.0,"km_total":1038.8}},{"linha":"160","nome":"Pedro Leopoldo / Lagoa Sto. Antônio","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":19.3,"ipk":{"2026-03":2.6,"2026-02":2.45,"2026-01":2.18,"2025-12":2.34,"2025-11":2.58,"2025-10":2.51,"2025-07":2.46,"2025-06":1.83,"2025-05":1.8,"2025-04":1.9,"2025-03":1.74,"2025-02":1.97,"2025-01":1.86,"2024-12":1.69,"2024-11":2.01,"2024-10":2.06,"2024-09":2.06,"2024-08":2.02,"2024-07":1.97,"2024-06":2.04,"2024-05":2.0,"2024-04":2.01,"2024-03":1.9,"2024-02":1.93,"2024-01":1.77,"2023-12":1.72,"2023-11":2.0,"2023-10":1.99,"2023-08":2.0,"2023-07":2.0,"2023-06":2.02,"2023-05":2.06,"2023-04":1.99,"2023-03":2.07,"2023-02":2.02,"2023-01":1.86},"atual":{"mes":"2026-03","ipk":2.6,"pagantes":33201,"gratuidade":5557,"total_pass":38758,"receita":99565.0,"km_total":14899.6}},{"linha":"161","nome":"Pedro Leopoldo / Lagoa Sto. Antônio via Andiara","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":22.3,"ipk":{"2026-03":1.85,"2026-02":1.65,"2026-01":1.62,"2025-12":1.81,"2025-11":1.83,"2025-10":1.87},"atual":{"mes":"2026-03","ipk":1.85,"pagantes":8694,"gratuidade":2194,"total_pass":10888,"receita":24086.0,"km_total":5887.2}},{"linha":"162","nome":"Pedro Leopoldo / Lagoa Sto. Antônio via Andiara atc Av. Cel. Juventino Dias","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":25.9,"ipk":{"2026-03":3.02,"2026-02":2.56,"2026-01":2.33,"2025-12":2.4,"2025-11":2.49,"2025-10":2.82},"atual":{"mes":"2026-03","ipk":3.02,"pagantes":1559,"gratuidade":160,"total_pass":1719,"receita":4677.0,"km_total":569.8}},{"linha":"163","nome":"Pedro Leopoldo / Lagoa Sto. Antônio via Felipe Cláudio","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":24.6,"ipk":{"2026-03":0.83,"2026-02":0.92,"2026-01":0.93,"2025-12":0.92,"2025-11":0.94,"2025-10":0.85},"atual":{"mes":"2026-03","ipk":0.83,"pagantes":2117,"gratuidade":221,"total_pass":2338,"receita":4623.0,"km_total":2804.4}},{"linha":"170","nome":"Pedro Leopoldo / Felipe Cláudio","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":14.1,"ipk":{"2026-03":2.68,"2026-02":1.22,"2026-01":1.64,"2025-12":2.21,"2025-11":2.72,"2025-10":2.62,"2025-07":4.44,"2025-06":3.22,"2025-05":3.33,"2025-04":2.69,"2025-03":2.24,"2025-02":2.52,"2025-01":1.89,"2024-12":1.85,"2024-11":2.3,"2024-10":2.31,"2024-09":2.26,"2024-08":2.27,"2024-07":2.11,"2024-06":2.22,"2024-05":2.21,"2024-04":2.24,"2024-03":2.3,"2024-02":2.09,"2024-01":1.88,"2023-12":1.77,"2023-11":2.18,"2023-10":2.14,"2023-08":2.1,"2023-07":1.96,"2023-06":2.0,"2023-05":2.19,"2023-04":2.13,"2023-03":2.23,"2023-02":2.03,"2023-01":1.81},"atual":{"mes":"2026-03","ipk":2.68,"pagantes":3689,"gratuidade":920,"total_pass":4609,"receita":11067.0,"km_total":1720.2}},{"linha":"171","nome":"Pedro Leopoldo / Felipe Cláudio via Teotônio Batista","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":16.9,"ipk":{"2026-03":2.54,"2026-02":2.37,"2026-01":2.19,"2025-12":2.25,"2025-11":2.4,"2025-10":2.66},"atual":{"mes":"2026-03","ipk":2.54,"pagantes":3275,"gratuidade":502,"total_pass":3777,"receita":9825.0,"km_total":1487.2}},{"linha":"172","nome":"Pedro Leopoldo / Felipe Cláudio via Morada dos Hibiscos","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":17.0,"ipk":{"2026-03":3.21,"2026-02":2.82,"2026-01":2.93,"2025-12":3.03,"2025-11":3.56,"2025-10":3.29},"atual":{"mes":"2026-03","ipk":3.21,"pagantes":1032,"gratuidade":168,"total_pass":1200,"receita":3096.0,"km_total":374.0}},{"linha":"180","nome":"Pedro Leopoldo / Morada dos Angicos","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":20.6,"ipk":{"2026-03":2.66,"2026-02":2.47,"2026-01":2.28,"2025-12":2.56,"2025-11":2.69,"2025-10":2.8,"2025-07":3.25,"2025-06":2.31,"2025-05":2.33,"2025-04":2.4,"2025-03":2.24,"2025-02":2.4,"2025-01":2.22,"2024-12":2.1,"2024-11":2.41,"2024-10":2.49,"2024-09":2.45,"2024-08":2.5,"2024-07":2.41,"2024-06":2.47,"2024-05":2.54,"2024-04":2.58,"2024-03":2.46,"2024-02":2.56,"2024-01":2.36,"2023-12":2.29,"2023-11":2.61,"2023-10":2.46,"2023-08":2.57,"2023-07":2.49,"2023-06":2.58,"2023-05":2.6,"2023-04":2.56,"2023-03":2.72,"2023-02":2.61,"2023-01":2.46},"atual":{"mes":"2026-03","ipk":2.66,"pagantes":34779,"gratuidade":6765,"total_pass":41544,"receita":100633.0,"km_total":15594.2}},{"linha":"181","nome":"Pedro Leopoldo / Morada dos Angicos via São Geraldo","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":23.8,"ipk":{"2026-03":2.49,"2026-02":2.35,"2026-01":2.14,"2025-12":2.32,"2025-11":2.54,"2025-10":2.41},"atual":{"mes":"2026-03","ipk":2.49,"pagantes":10794,"gratuidade":2169,"total_pass":12963,"receita":32116.0,"km_total":5212.2}},{"linha":"182","nome":"Pedro Leopoldo / Morada dos Angicos via Santa Tereza atc 5ª dos Mocambeiros","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":21.6,"ipk":{"2026-03":3.04,"2026-02":2.84,"2026-01":2.55,"2025-12":2.64,"2025-11":2.74,"2025-10":2.74},"atual":{"mes":"2026-03","ipk":3.04,"pagantes":7678,"gratuidade":1259,"total_pass":8937,"receita":23034.0,"km_total":2937.6}},{"linha":"183","nome":"Pedro Leopoldo / Morada dos Angicos via Novo Campinho","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":21.9,"ipk":{"2026-03":2.9,"2026-02":2.85,"2026-01":2.78,"2025-12":2.99,"2025-11":3.07,"2025-10":2.61},"atual":{"mes":"2026-03","ipk":2.9,"pagantes":1476,"gratuidade":431,"total_pass":1907,"receita":4428.0,"km_total":657.0}},{"linha":"184","nome":"Pedro Leopoldo / Morada dos Angicos atc Distrito Industrial","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":36.2,"ipk":{"2026-03":2.19,"2026-02":2.01,"2026-01":1.76,"2025-12":1.83,"2025-11":2.09,"2025-10":2.18},"atual":{"mes":"2026-03","ipk":2.19,"pagantes":3238,"gratuidade":250,"total_pass":3488,"receita":9714.0,"km_total":1592.8}},{"linha":"190","nome":"Pedro Leopoldo / Dr. Lund","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":11.8,"ipk":{"2026-03":1.42,"2026-02":1.01,"2026-01":0.84,"2025-12":1.16,"2025-11":1.29,"2025-10":1.28,"2025-07":1.32,"2025-06":0.76,"2025-05":0.67,"2025-04":0.82,"2025-03":0.98,"2025-02":1.25,"2025-01":1.19,"2024-12":0.66,"2024-11":1.01,"2024-10":1.07,"2024-09":1.4,"2024-08":1.28,"2024-07":1.19,"2024-06":1.23,"2024-05":1.26,"2024-04":1.51,"2024-03":1.53,"2024-02":1.44,"2024-01":1.24,"2023-12":1.24,"2023-11":1.32,"2023-10":1.37,"2023-08":1.29,"2023-07":1.23,"2023-06":1.45,"2023-05":1.17,"2023-04":1.39,"2023-03":1.44,"2023-02":0.92,"2023-01":0.9},"atual":{"mes":"2026-03","ipk":1.42,"pagantes":623,"gratuidade":114,"total_pass":737,"receita":1869.0,"km_total":519.2}},{"linha":"200","nome":"Pedro Leopoldo / Faculdade","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":15.8,"ipk":{},"atual":{"mes":"2026-03","ipk":null,"pagantes":null,"gratuidade":null,"total_pass":null,"receita":null,"km_total":null}},{"linha":"250","nome":"Circular - Amélia Torres / Santo Antônio","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":7.11,"ipk":{"2026-03":3.07,"2026-02":2.69,"2026-01":2.4,"2025-12":2.61,"2025-11":2.97,"2025-10":2.95,"2025-07":2.68,"2025-06":1.97,"2025-05":1.95,"2025-04":0.93,"2025-03":1.62,"2025-02":1.94,"2025-01":1.64,"2024-12":1.45,"2024-11":1.92,"2024-10":1.98,"2024-09":2.03,"2024-08":1.85,"2024-07":1.8,"2024-06":1.95,"2024-05":1.9,"2024-04":2.02,"2024-03":1.9,"2024-02":1.93,"2024-01":1.71,"2023-12":1.73,"2023-11":1.98,"2023-10":1.98,"2023-08":2.08,"2023-07":1.99,"2023-06":1.95,"2023-05":2.03,"2023-04":1.98,"2023-03":2.14,"2023-02":1.92,"2023-01":1.75},"atual":{"mes":"2026-03","ipk":3.07,"pagantes":9358,"gratuidade":4796,"total_pass":14154,"receita":27826.0,"km_total":4607.28}},{"linha":"251","nome":"Circular - Amélia Torres / Santo Antônio via Distrito Industrial","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":9.6,"ipk":{"2026-03":2.77,"2026-02":2.51,"2026-01":2.19,"2025-12":2.18,"2025-11":2.47,"2025-10":2.68},"atual":{"mes":"2026-03","ipk":2.77,"pagantes":3110,"gratuidade":779,"total_pass":3889,"receita":9116.0,"km_total":1401.6}},{"linha":"252","nome":"Circular - Amélia Torres / Santo Antônio atc Mirante","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":8.68,"ipk":{"2026-03":3.93,"2026-02":3.7,"2026-01":2.71,"2025-12":3.41,"2025-11":3.41,"2025-10":3.62},"atual":{"mes":"2026-03","ipk":3.93,"pagantes":1665,"gratuidade":588,"total_pass":2253,"receita":4995.0,"km_total":572.88}},{"linha":"300","nome":"Pedro Leopoldo / Quinta do Sumidouro","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":47.3,"ipk":{"2026-03":1.45,"2026-02":1.33,"2026-01":1.16,"2025-12":1.34,"2025-11":1.4,"2025-10":1.39,"2025-07":1.53,"2025-06":1.12,"2025-05":1.1,"2025-04":1.28,"2025-03":1.02,"2025-02":1.13,"2025-01":1.04,"2024-12":1.02,"2024-11":1.23,"2024-10":1.12,"2024-09":1.16,"2024-08":1.15,"2024-07":1.11,"2024-06":1.17,"2024-05":1.15,"2024-04":1.15,"2024-03":1.1,"2024-02":1.12,"2024-01":1.0,"2023-12":1.02,"2023-11":1.16,"2023-10":1.15,"2023-08":1.19,"2023-07":1.18,"2023-06":1.14,"2023-05":1.2,"2023-04":1.19,"2023-03":1.25,"2023-02":1.21,"2023-01":1.14},"atual":{"mes":"2026-03","ipk":1.45,"pagantes":24461,"gratuidade":4426,"total_pass":28887,"receita":71141.0,"km_total":19866.0}},{"linha":"301","nome":"Pedro Leopoldo / Quinta do Sumidouro atc Periquito","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":49.4,"ipk":{"2026-03":1.27,"2026-02":1.16,"2026-01":1.15,"2025-12":1.22,"2025-11":1.17,"2025-10":1.15},"atual":{"mes":"2026-03","ipk":1.27,"pagantes":1951,"gratuidade":303,"total_pass":2254,"receita":5023.0,"km_total":1778.4}},{"linha":"302","nome":"Pedro Leopoldo / Quinta do Sumidouro via T. Batista / Dom Camilo / Morada dos Angicos","grupo":"MUNICIPAL PEDRO LEOPOLDO","km":53.0,"ipk":{"2026-03":0.65,"2026-02":0.68,"2026-01":0.64,"2025-12":0.67,"2025-11":0.65,"2025-10":0.62},"atual":{"mes":"2026-03","ipk":0.65,"pagantes":2793,"gratuidade":250,"total_pass":3043,"receita":7451.0,"km_total":4717.0}},{"linha":"5110","nome":"Pedro Leopoldo / Lagoa Santa via Confins","grupo":"METROPOLITANO","km":34.6,"ipk":{"2026-03":0.89,"2026-02":0.88,"2026-01":0.83,"2025-12":0.85,"2025-11":0.88,"2025-10":0.97,"2025-09":0.99,"2025-08":0.99,"2025-07":0.99,"2025-06":0.95,"2025-05":0.91,"2025-04":1.37,"2025-03":0.91,"2025-02":0.79,"2025-01":0.74,"2024-12":0.68,"2024-11":0.77,"2024-10":0.79,"2024-09":0.79,"2024-08":0.81,"2024-07":0.82,"2024-06":0.84,"2024-05":0.83,"2024-04":0.86,"2024-03":0.87,"2024-02":0.83,"2024-01":0.75,"2023-12":0.7,"2023-11":1.02,"2023-10":0.84,"2023-08":1.01,"2023-07":0.83,"2023-06":0.98,"2023-05":1.02,"2023-04":1.0,"2023-03":1.05,"2023-02":1.06,"2023-01":1.06},"atual":{"mes":"2026-03","ipk":0.89,"pagantes":4479,"gratuidade":523,"total_pass":5002,"receita":48992.52,"km_total":5051.6}},{"linha":"5113","nome":"Pedro Leopoldo / Lagoa Santa","grupo":"METROPOLITANO","km":31.15,"ipk":{"2026-03":0.42,"2026-02":0.43,"2026-01":0.38,"2025-12":0.36,"2025-11":0.4,"2025-10":0.42,"2025-09":0.42,"2025-08":0.48,"2025-07":0.45,"2025-06":0.43,"2025-05":0.43,"2025-04":1.15,"2025-03":0.39},"atual":{"mes":"2026-03","ipk":0.42,"pagantes":1648,"gratuidade":238,"total_pass":1886,"receita":18247.92,"km_total":3924.9}},{"linha":"5119","nome":"Pedro Leopoldo / Aerp. de Confins via Lapa Vermelha","grupo":"METROPOLITANO","km":18.0,"ipk":{"2026-03":1.23,"2026-02":1.34,"2026-01":1.37,"2025-12":1.31,"2025-11":1.43,"2025-10":1.49,"2025-09":1.41,"2025-08":1.45,"2025-07":1.35,"2025-06":1.44,"2025-05":1.42,"2025-04":0.93,"2025-03":1.41,"2025-02":1.59,"2025-01":1.51,"2024-12":1.46,"2024-11":1.48,"2024-10":1.42,"2024-09":1.55,"2024-08":1.18,"2024-07":1.26,"2024-06":1.52,"2024-05":0.99,"2024-04":0.98,"2024-03":0.92,"2024-02":0.93,"2024-01":1.0,"2023-12":0.94,"2023-11":0.96,"2023-10":1.1,"2023-08":1.05,"2023-07":1.09,"2023-06":1.02,"2023-05":0.98,"2023-04":1.01,"2023-03":1.06,"2023-02":1.02,"2023-01":0.97},"atual":{"mes":"2026-03","ipk":1.23,"pagantes":1955,"gratuidade":77,"total_pass":2032,"receita":17112.79,"km_total":1584.0}},{"linha":"5120","nome":"Pedro Leopoldo / Aerop.confins via Dr. Lund","grupo":"METROPOLITANO","km":23.4,"ipk":{"2026-03":1.21,"2026-02":1.23,"2026-01":1.2,"2025-12":1.18,"2025-11":1.2,"2025-10":1.23,"2025-09":1.27,"2025-08":1.21,"2025-07":1.28,"2025-06":1.31,"2025-05":1.29,"2025-04":2.26,"2025-03":1.35,"2025-02":1.48,"2025-01":1.44,"2024-12":1.38,"2024-11":1.54,"2024-10":1.47,"2024-09":1.47,"2024-08":1.44,"2024-07":1.52,"2024-06":1.54,"2024-05":1.44,"2024-04":1.5,"2024-03":1.48,"2024-02":1.46,"2024-01":1.33,"2023-12":1.24,"2023-11":1.46,"2023-10":1.11,"2023-08":1.07,"2023-07":2.03,"2023-06":1.53,"2023-05":1.11,"2023-04":1.09,"2023-03":1.15,"2023-02":1.15,"2023-01":1.05},"atual":{"mes":"2026-03","ipk":1.21,"pagantes":9309,"gratuidade":839,"total_pass":10148,"receita":82098.71,"km_total":7698.6}},{"linha":"5121","nome":"Pedro Leopoldo / Aerop.confins via MG-424","grupo":"METROPOLITANO","km":21.3,"ipk":{"2026-03":1.29,"2026-02":1.24,"2026-01":1.24,"2025-12":1.27,"2025-11":1.25,"2025-10":1.3,"2025-09":1.27,"2025-08":1.3,"2025-07":1.27,"2025-06":1.36,"2025-05":1.36,"2025-04":0.77,"2025-03":1.35,"2025-02":1.48,"2025-01":1.4,"2024-12":1.41,"2024-11":1.47,"2024-10":1.49,"2024-09":1.39,"2024-08":1.46,"2024-07":1.48,"2024-06":1.43,"2024-05":1.43,"2024-04":1.44,"2024-03":1.39,"2024-02":1.42,"2024-01":1.43,"2023-12":1.36,"2023-11":1.48,"2023-10":1.77,"2023-08":1.61},"atual":{"mes":"2026-03","ipk":1.29,"pagantes":18505,"gratuidade":1445,"total_pass":19950,"receita":163501.16,"km_total":14313.6}},{"linha":"5130","nome":"Dom Pedro I / Terminal Vilarinho","grupo":"METROPOLITANO","km":37.3,"ipk":{"2026-03":1.44,"2026-02":1.34,"2026-01":1.32,"2025-12":1.33,"2025-11":1.41,"2025-10":1.45,"2025-09":1.45,"2025-08":1.43,"2025-07":1.08,"2025-06":1.1,"2025-05":1.1,"2025-04":1.09,"2025-03":1.23,"2025-02":1.14,"2025-01":1.1,"2024-12":1.06,"2024-11":1.22,"2024-10":1.2,"2024-09":1.16,"2024-08":1.2,"2024-07":1.22,"2024-06":1.22,"2024-05":1.24,"2024-04":1.3,"2024-03":1.27,"2024-02":1.23,"2024-01":1.33,"2023-12":1.22,"2023-11":1.47,"2023-10":1.39,"2023-08":1.4,"2023-07":1.42,"2023-06":1.38,"2023-05":1.44,"2023-04":1.32,"2023-03":1.29,"2023-02":1.2,"2023-01":1.14},"atual":{"mes":"2026-03","ipk":1.44,"pagantes":58388,"gratuidade":8402,"total_pass":66790,"receita":430893.76,"km_total":40582.4}},{"linha":"5140","nome":"São José da Lapa / Terminal Vilarinho","grupo":"METROPOLITANO","km":34.3,"ipk":{"2026-03":1.14,"2026-02":1.09,"2026-01":0.99,"2025-12":1.06,"2025-11":1.19,"2025-10":1.22,"2025-09":1.24,"2025-08":1.16,"2025-07":0.88,"2025-06":0.9,"2025-05":0.92,"2025-04":0.71,"2025-03":0.83,"2025-02":0.95,"2025-01":0.89,"2024-12":0.76,"2024-11":1.0,"2024-10":0.97,"2024-09":0.97,"2024-08":0.96,"2024-07":0.96,"2024-06":1.01,"2024-05":1.0,"2024-04":1.04,"2024-03":1.01,"2024-02":0.99,"2024-01":0.94,"2023-12":0.94,"2023-11":1.14,"2023-10":1.02,"2023-08":1.06,"2023-07":1.04,"2023-06":1.03,"2023-05":1.07,"2023-04":1.03,"2023-03":1.06,"2023-02":0.96,"2023-01":0.93},"atual":{"mes":"2026-03","ipk":1.14,"pagantes":12386,"gratuidade":2229,"total_pass":14615,"receita":90724.4,"km_total":10838.8}},{"linha":"5141","nome":"São José da Lapa / Terminal Vilarinho via Maria de Lourdes","grupo":"METROPOLITANO","km":18.2,"ipk":{"2026-03":1.06,"2026-02":0.92,"2025-12":1.03,"2025-11":1.05,"2025-10":1.44,"2025-09":1.82,"2025-08":1.75,"2025-07":1.79,"2025-06":2.23,"2025-05":2.36,"2025-04":0.5,"2025-03":3.04,"2025-02":1.81,"2024-12":2.68,"2024-11":2.78,"2024-10":2.85,"2024-09":3.06,"2024-08":3.12,"2024-07":2.81,"2024-06":2.98,"2024-05":3.01,"2024-04":3.46,"2024-03":3.39,"2024-02":3.45,"2024-01":2.9,"2023-12":2.5,"2023-11":3.22,"2023-10":3.53,"2023-08":3.55,"2023-07":2.56,"2023-06":2.68,"2023-05":2.76,"2023-04":2.61,"2023-03":2.57,"2023-02":3.17,"2023-01":2.61},"atual":{"mes":"2026-03","ipk":1.06,"pagantes":425,"gratuidade":63,"total_pass":488,"receita":4074.41,"km_total":400.4}},{"linha":"5142","nome":"Dom Pedro I / Terminal Vilarinho via São José da Lapa","grupo":"METROPOLITANO","km":45.7,"ipk":{},"atual":{"mes":"2026-03","ipk":null,"pagantes":null,"gratuidade":null,"total_pass":null,"receita":null,"km_total":null}},{"linha":"5150","nome":"Inacia de Carvalho / Terminal Vilarinho via São José da Lapa","grupo":"METROPOLITANO","km":60.0,"ipk":{"2026-03":0.7,"2026-02":0.63,"2026-01":0.67,"2025-12":0.65,"2025-11":0.78,"2025-10":0.77,"2025-09":0.84,"2025-08":0.77,"2025-07":0.65,"2025-06":0.72,"2025-05":0.57,"2025-04":0.34,"2025-03":0.64,"2025-02":0.79,"2025-01":0.69,"2024-12":0.59,"2024-11":0.75,"2024-10":0.78,"2024-09":0.8,"2024-08":0.8,"2024-07":0.78,"2024-06":0.82,"2024-05":0.77,"2024-04":0.84,"2024-03":0.76,"2024-02":0.76,"2024-01":0.72,"2023-12":0.68,"2023-11":0.84,"2023-10":0.84,"2023-08":0.8,"2023-07":0.83,"2023-06":0.79,"2023-05":0.85,"2023-04":0.81,"2023-03":0.82,"2023-02":0.74,"2023-01":0.77},"atual":{"mes":"2026-03","ipk":0.7,"pagantes":7161,"gratuidade":1678,"total_pass":8839,"receita":55593.71,"km_total":10260.0}},{"linha":"5151","nome":"Inacia de Carvalho / Terminal Vilarinho via Dom Pedro I","grupo":"METROPOLITANO","km":52.0,"ipk":{"2026-03":0.28,"2026-02":0.24,"2026-01":0.33,"2025-12":0.29},"atual":{"mes":"2026-03","ipk":0.28,"pagantes":475,"gratuidade":169,"total_pass":644,"receita":2963.8,"km_total":1716.0}},{"linha":"5160","nome":"Cachoeira / Terminal Vilarinho via Lar de Minas","grupo":"METROPOLITANO","km":39.6,"ipk":{"2026-03":1.25,"2026-02":1.15,"2026-01":0.98,"2025-12":1.05,"2025-11":1.23,"2025-10":1.24,"2025-09":1.25,"2025-08":1.22,"2025-07":0.98,"2025-06":1.04,"2025-05":1.03,"2025-04":0.16,"2025-03":0.95,"2025-02":1.07,"2025-01":0.9,"2024-12":0.85,"2024-11":1.08,"2024-10":1.1,"2024-09":1.07,"2024-08":1.07,"2024-07":1.03,"2024-06":1.12,"2024-05":1.13,"2024-04":1.2,"2024-03":1.15,"2024-02":1.11,"2024-01":1.07,"2023-12":1.03,"2023-11":1.19,"2023-10":1.17,"2023-08":1.15,"2023-07":1.07,"2023-06":1.08,"2023-05":1.28,"2023-04":1.08,"2023-03":1.03,"2023-02":0.87,"2023-01":0.86},"atual":{"mes":"2026-03","ipk":1.25,"pagantes":15242,"gratuidade":2275,"total_pass":17517,"receita":117977.76,"km_total":12236.4}},{"linha":"5162","nome":"Dom Pedro I / Cachoeira / Terminal Vilarinho via Lar de Minas","grupo":"METROPOLITANO","km":43.3,"ipk":{"2026-03":1.15,"2026-02":1.12,"2026-01":1.04,"2025-12":0.94,"2025-11":0.98,"2025-10":1.09,"2025-09":1.07,"2025-08":1.03,"2025-07":0.65,"2025-06":0.72,"2025-05":0.71,"2025-04":0.21,"2025-03":0.74,"2025-02":0.71,"2025-01":0.73,"2024-12":0.66,"2024-11":0.86,"2024-10":0.84,"2024-09":0.81,"2024-08":0.79,"2024-07":0.72,"2024-06":0.73,"2024-05":0.75,"2024-04":0.86,"2024-03":0.8,"2024-02":0.96,"2024-01":0.76,"2023-12":0.77,"2023-11":1.03,"2023-10":0.9,"2023-08":0.19,"2023-07":0.92,"2023-06":0.84,"2023-05":0.86,"2023-04":0.93,"2023-03":0.93,"2023-02":0.8,"2023-01":0.7},"atual":{"mes":"2026-03","ipk":1.15,"pagantes":3528,"gratuidade":341,"total_pass":3869,"receita":24511.37,"km_total":3074.3}},{"linha":"5170","nome":"Vespasiano / Tavares","grupo":"METROPOLITANO","km":25.3,"ipk":{"2026-03":0.43,"2026-02":0.36,"2026-01":0.39,"2025-12":0.41,"2025-11":0.43,"2025-10":0.44,"2025-09":0.42,"2025-08":0.42,"2025-07":0.44,"2025-06":0.51,"2025-05":0.5,"2025-04":0.86,"2025-03":0.46,"2025-02":0.47,"2025-01":0.51,"2024-12":0.37,"2024-11":0.53,"2024-10":0.54,"2024-09":0.55,"2024-08":0.57,"2024-07":0.57,"2024-06":0.66,"2024-05":0.59,"2024-04":0.59,"2024-03":0.59,"2024-02":0.53,"2024-01":0.64,"2023-12":0.5,"2023-11":0.55,"2023-10":0.53,"2023-08":0.52,"2023-07":0.53,"2023-06":0.59,"2023-05":0.3,"2023-04":0.57,"2023-03":0.54,"2023-02":0.52,"2023-01":0.49},"atual":{"mes":"2026-03","ipk":0.43,"pagantes":803,"gratuidade":288,"total_pass":1091,"receita":7058.26,"km_total":1872.2}},{"linha":"5180","nome":"Pedro Leopoldo / Lapinha","grupo":"METROPOLITANO","km":65.3,"ipk":{"2026-03":0.24,"2026-02":0.22,"2026-01":0.19,"2025-12":0.26,"2025-11":0.27,"2025-10":0.29,"2025-09":0.27,"2025-08":0.27,"2025-07":0.32,"2025-06":0.3,"2025-05":0.3,"2025-04":1.14,"2025-03":0.29,"2025-02":0.29,"2025-01":0.27,"2024-12":0.32,"2024-11":0.37,"2024-10":0.32,"2024-09":0.32,"2024-08":0.33,"2024-07":0.36,"2024-06":0.34,"2024-05":0.33,"2024-04":0.31,"2024-03":0.31,"2024-02":0.31,"2024-01":0.36,"2023-12":0.35,"2023-11":0.35,"2023-10":0.34,"2023-08":0.36,"2023-07":0.37,"2023-06":0.35,"2023-05":0.57,"2023-04":0.32,"2023-03":0.36,"2023-02":0.33,"2023-01":0.33},"atual":{"mes":"2026-03","ipk":0.24,"pagantes":702,"gratuidade":437,"total_pass":1139,"receita":5886.86,"km_total":2873.2}},{"linha":"5190","nome":"Pedro Leopoldo / Palmital","grupo":"METROPOLITANO","km":66.4,"ipk":{"2026-03":0.13,"2026-02":0.06,"2026-01":0.12,"2025-12":0.08,"2025-11":0.24,"2025-10":0.26,"2025-09":0.24,"2025-08":0.26,"2025-07":0.2,"2025-06":0.26,"2025-05":0.22,"2025-04":0.7,"2025-03":0.21,"2025-02":0.25,"2025-01":0.05,"2024-12":0.11,"2024-11":0.22,"2024-10":0.24,"2024-09":0.23,"2024-08":0.24,"2024-07":0.27,"2024-06":0.28,"2024-05":0.19,"2024-04":0.27,"2024-03":0.19,"2024-02":0.16,"2024-01":0.19,"2023-12":0.21,"2023-11":0.2,"2023-10":0.16,"2023-08":0.24,"2023-07":0.27,"2023-06":0.33,"2023-05":0.38,"2023-04":0.31,"2023-03":0.29,"2023-02":0.26,"2023-01":0.32},"atual":{"mes":"2026-03","ipk":0.13,"pagantes":68,"gratuidade":44,"total_pass":112,"receita":578.52,"km_total":531.2}},{"linha":"5200","nome":"Pedro Leopoldo / Quinta das Palmeiras","grupo":"METROPOLITANO","km":48.0,"ipk":{"2026-03":0.24,"2026-02":0.31,"2026-01":0.31,"2025-12":0.17,"2025-11":0.28,"2025-10":0.23,"2025-09":0.36,"2025-08":0.4,"2025-07":0.19,"2025-06":0.19,"2025-05":0.23,"2025-04":0.59,"2025-03":0.27,"2025-02":0.22,"2025-01":0.11,"2024-12":0.22,"2024-11":0.32,"2024-10":0.25,"2024-09":0.1,"2024-08":0.28,"2024-07":0.26,"2024-06":0.27,"2024-05":0.3,"2024-04":0.16,"2024-03":0.22,"2024-02":0.12,"2024-01":0.09,"2023-12":0.2,"2023-11":0.17,"2023-10":0.22,"2023-08":0.26,"2023-07":0.34,"2023-06":0.19,"2023-05":0.28,"2023-04":0.3,"2023-03":0.36,"2023-02":0.35,"2023-01":0.29},"atual":{"mes":"2026-03","ipk":0.24,"pagantes":46,"gratuidade":11,"total_pass":57,"receita":335.23,"km_total":192.0}},{"linha":"5230","nome":"Vespasiano / Bela Vista","grupo":"METROPOLITANO","km":33.7,"ipk":{"2026-03":0.7,"2026-02":0.65,"2026-01":0.69,"2025-12":0.67,"2025-11":0.68,"2025-10":0.78,"2025-09":0.75,"2025-08":0.7,"2025-07":0.75,"2025-06":0.9,"2025-05":0.82,"2025-04":1.13,"2025-03":0.78,"2025-02":0.92,"2025-01":0.84,"2024-12":0.65,"2024-11":0.93,"2024-10":0.93,"2024-09":0.88,"2024-08":0.86,"2024-07":0.95,"2024-06":0.94,"2024-05":0.92,"2024-04":1.12,"2024-03":1.09,"2024-02":0.98,"2024-01":0.76,"2023-12":0.83,"2023-11":1.37,"2023-10":1.07,"2023-08":1.24,"2023-07":1.06,"2023-06":1.17,"2023-05":1.63,"2023-04":1.13,"2023-03":1.23,"2023-02":1.07,"2023-01":1.34},"atual":{"mes":"2026-03","ipk":0.7,"pagantes":5157,"gratuidade":2471,"total_pass":7628,"receita":45833.15,"km_total":7414.0}},{"linha":"5280","nome":"Dom Pedro I / Vespasiano / Aeroporto Int. Tancredo Neves","grupo":"METROPOLITANO","km":24.75,"ipk":{"2026-03":0.98,"2026-02":0.99,"2026-01":1.01,"2025-12":0.96,"2025-11":1.04,"2025-10":1.09,"2025-09":1.04,"2025-08":1.0,"2025-07":1.08,"2025-06":1.06,"2025-05":1.01,"2025-04":0.83,"2025-03":1.04,"2025-02":1.11,"2025-01":0.94,"2024-12":0.82,"2024-11":1.1,"2024-10":1.03,"2024-09":1.04,"2024-08":0.98,"2024-07":0.98,"2024-06":0.98,"2024-05":0.89,"2024-04":0.72,"2024-03":0.79,"2024-02":0.78,"2024-01":0.84,"2023-12":0.79,"2023-11":1.02,"2023-10":0.96,"2023-08":0.97,"2023-07":0.96,"2023-06":0.89,"2023-05":0.21,"2023-04":0.85,"2023-03":0.87,"2023-02":0.83,"2023-01":0.84},"atual":{"mes":"2026-03","ipk":0.98,"pagantes":3380,"gratuidade":506,"total_pass":3886,"receita":28330.35,"km_total":3465.0}},{"linha":"5282","nome":"Mocambeiro / Terminal Vilarinho","grupo":"METROPOLITANO","km":41.7,"ipk":{"2026-03":0.65,"2026-02":0.65,"2026-01":0.64,"2025-12":0.62,"2025-11":0.69,"2025-10":0.73,"2025-09":0.76,"2025-08":0.75,"2025-07":0.73,"2025-06":0.66,"2025-05":0.65,"2025-04":0.51,"2025-03":0.6,"2025-02":0.69,"2025-01":0.72,"2024-12":0.65,"2024-11":0.76,"2024-10":0.75,"2024-09":0.71,"2024-08":0.68,"2024-07":0.74,"2024-06":0.75,"2024-05":0.71,"2024-04":0.73,"2024-03":0.64,"2024-02":0.65,"2024-01":0.6,"2023-12":0.59,"2023-11":0.78,"2023-10":0.76,"2023-08":0.77,"2023-07":0.83,"2023-06":0.76,"2023-05":1.28,"2023-04":0.72,"2023-03":0.73,"2023-02":0.79,"2023-01":0.83},"atual":{"mes":"2026-03","ipk":0.65,"pagantes":1374,"gratuidade":207,"total_pass":1581,"receita":27484.38,"km_total":2126.7}},{"linha":"5283","nome":"Vespasiano / Pedro Leopoldo","grupo":"METROPOLITANO","km":20.9,"ipk":{"2026-03":0.52,"2026-02":0.48,"2026-01":0.45,"2025-12":0.49,"2025-11":0.55,"2025-10":0.55,"2025-09":0.57,"2025-08":0.54,"2025-07":0.55,"2025-06":0.59,"2025-05":0.56,"2025-04":1.03,"2025-03":0.52,"2025-02":0.59,"2025-01":0.54,"2024-12":0.5,"2024-11":0.64,"2024-10":0.66,"2024-09":0.66,"2024-08":0.63,"2024-07":0.65,"2024-06":0.63,"2024-05":0.62,"2024-04":0.69,"2024-03":0.66,"2024-02":0.67,"2024-01":0.62,"2023-12":0.64,"2023-11":0.79,"2023-10":0.77,"2023-08":0.64,"2023-07":0.77,"2023-06":0.73,"2023-05":0.96,"2023-04":0.66,"2023-03":0.68,"2023-02":0.66,"2023-01":0.67},"atual":{"mes":"2026-03","ipk":0.52,"pagantes":3765,"gratuidade":1250,"total_pass":5015,"receita":41122.09,"km_total":7231.4}},{"linha":"5287","nome":"Pedro Leopoldo / Mocambeiro via Adelia Issa","grupo":"METROPOLITANO","km":27.4,"ipk":{"2026-03":1.18,"2026-02":1.08,"2026-01":1.1,"2025-12":1.11,"2025-11":1.14,"2025-10":1.11,"2025-09":1.13,"2025-08":1.09,"2025-07":1.08,"2025-06":1.09,"2025-05":1.08,"2025-04":0.82,"2025-03":1.11,"2025-02":1.2,"2025-01":1.1,"2024-12":1.07,"2024-11":1.32,"2024-10":1.3,"2024-09":1.31,"2024-08":1.23,"2024-07":1.32,"2024-06":1.3,"2024-05":1.27,"2024-04":1.34,"2024-03":1.26,"2024-02":1.3,"2024-01":1.28,"2023-12":1.21,"2023-11":1.45,"2023-10":1.46,"2023-08":1.36,"2023-07":1.34,"2023-06":1.35,"2023-05":0.87,"2023-04":1.34,"2023-03":1.47,"2023-02":1.37,"2023-01":1.26},"atual":{"mes":"2026-03","ipk":1.18,"pagantes":5974,"gratuidade":1340,"total_pass":7314,"receita":41182.0,"km_total":5069.0}},{"linha":"5288","nome":"Pedro Leopoldo / Mocambeiro via Dom Camilo","grupo":"METROPOLITANO","km":28.0,"ipk":{"2026-03":0.76,"2026-02":0.66,"2026-01":0.72,"2025-12":0.65,"2025-11":0.73,"2025-10":0.77,"2025-09":0.81,"2025-08":0.81,"2025-07":0.76,"2025-06":0.81,"2025-05":0.9,"2025-04":1.21,"2025-03":0.81,"2025-02":0.81,"2025-01":0.81,"2024-12":1.18,"2024-11":0.91,"2024-10":0.82,"2024-09":0.84,"2024-08":0.85,"2024-07":0.92,"2024-06":0.98,"2024-05":0.95,"2024-04":0.92,"2024-03":0.94,"2024-02":0.93,"2024-01":1.07,"2023-12":0.96,"2023-11":1.02,"2023-10":0.8,"2023-08":0.98,"2023-07":0.96,"2023-06":1.0,"2023-05":0.74,"2023-04":0.94,"2023-03":0.93,"2023-02":0.88,"2023-01":0.73},"atual":{"mes":"2026-03","ipk":0.76,"pagantes":1705,"gratuidade":690,"total_pass":2395,"receita":11385.65,"km_total":2254.0}},{"linha":"5289","nome":"Mocambeiro / Terminal Vilarinho via Lagoa de Sto. Antônio","grupo":"METROPOLITANO","km":43.3,"ipk":{"2026-03":0.49,"2026-02":0.43,"2026-01":0.5,"2025-12":0.59,"2025-11":0.61,"2025-10":0.55,"2025-09":0.5,"2025-08":0.42,"2025-07":0.51,"2025-06":0.53,"2025-05":0.44,"2025-04":0.8,"2025-03":0.59,"2025-02":0.45,"2025-01":0.37,"2024-12":0.49,"2024-11":0.48,"2024-10":0.6,"2024-09":0.57,"2024-08":0.46,"2024-07":0.44,"2024-06":0.52,"2024-05":0.51,"2024-04":0.61,"2024-03":0.53,"2024-02":0.49,"2024-01":0.57,"2023-12":0.51,"2023-11":0.61,"2023-10":0.66,"2023-08":0.77},"atual":{"mes":"2026-03","ipk":0.49,"pagantes":85,"gratuidade":30,"total_pass":115,"receita":1844.5,"km_total":173.2}},{"linha":"5292","nome":"Vespasiano / Cachoeira","grupo":"METROPOLITANO","km":22.4,"ipk":{"2026-03":0.97,"2026-02":0.91,"2026-01":0.92,"2025-12":0.93,"2025-11":0.95,"2025-10":0.96,"2025-09":0.96,"2025-08":0.94,"2025-07":0.92,"2025-06":0.97,"2025-05":0.98,"2025-04":0.47,"2025-03":0.9,"2025-02":0.99,"2025-01":0.93,"2024-12":0.8,"2024-11":1.06,"2024-10":1.07,"2024-09":1.1,"2024-08":1.09,"2024-07":1.17,"2024-06":1.2,"2024-05":1.25,"2024-04":1.39,"2024-03":1.35,"2024-02":1.39,"2024-01":1.24,"2023-12":1.16,"2023-11":1.43,"2023-10":1.34,"2023-08":1.37,"2023-07":1.4,"2023-06":1.55,"2023-05":2.3,"2023-04":1.4,"2023-03":1.51,"2023-02":1.33,"2023-01":1.43},"atual":{"mes":"2026-03","ipk":0.97,"pagantes":5010,"gratuidade":2117,"total_pass":7127,"receita":44580.08,"km_total":5152.0}},{"linha":"5293","nome":"Lagoa de Santo Antonio / Terminal Vilarinho","grupo":"METROPOLITANO","km":37.5,"ipk":{"2026-03":0.81,"2026-02":0.65,"2026-01":0.68,"2025-12":0.63,"2025-11":0.73,"2025-10":0.73,"2025-09":0.75,"2025-08":0.78,"2025-07":0.72,"2025-06":0.8,"2025-05":0.76,"2025-04":0.32,"2025-03":0.85,"2025-02":0.88,"2025-01":0.72,"2024-12":0.73,"2024-11":0.83,"2024-10":0.83,"2024-09":0.85,"2024-08":0.81,"2024-07":0.84,"2024-06":0.87,"2024-05":0.87,"2024-04":1.08,"2024-03":1.24,"2024-02":1.15,"2024-01":1.12,"2023-12":1.09,"2023-11":1.27,"2023-10":1.16,"2023-08":1.15,"2023-07":1.1,"2023-06":1.12,"2023-05":0.7,"2023-04":1.22,"2023-03":1.02,"2023-02":0.99,"2023-01":1.07},"atual":{"mes":"2026-03","ipk":0.81,"pagantes":1722,"gratuidade":372,"total_pass":2094,"receita":35115.67,"km_total":2137.5}},{"linha":"5296","nome":"Pedro Leopoldo / Vespasiano via Trevo Ical","grupo":"METROPOLITANO","km":23.9,"ipk":{"2026-03":1.06,"2026-02":1.02,"2026-01":0.88,"2025-12":1.01,"2025-11":1.1,"2025-10":1.06,"2025-09":0.99,"2025-08":1.08,"2025-07":1.0,"2025-06":1.04,"2025-05":1.04,"2025-04":0.67,"2025-03":1.14,"2025-02":1.14,"2025-01":0.98,"2024-12":0.9,"2024-11":1.19,"2024-10":1.3,"2024-09":1.21,"2024-08":1.35,"2024-07":1.28,"2024-06":1.23,"2024-05":1.48,"2024-04":1.33,"2024-03":0.95,"2024-02":0.55,"2024-01":0.52,"2023-12":0.46,"2023-11":0.69,"2023-10":0.71,"2023-08":0.88,"2023-07":0.68,"2023-06":0.66,"2023-05":1.46,"2023-04":0.76,"2023-03":0.55,"2023-02":0.53,"2023-01":0.5},"atual":{"mes":"2026-03","ipk":1.06,"pagantes":557,"gratuidade":62,"total_pass":619,"receita":4706.65,"km_total":525.8}},{"linha":"5297","nome":"Pedro Leopoldo / Terminal Vilarinho","grupo":"METROPOLITANO","km":56.0,"ipk":{"2026-03":0.87,"2026-02":0.8,"2026-01":0.73,"2025-12":0.81,"2025-11":0.83,"2025-10":0.87,"2025-09":0.9,"2025-08":0.85,"2025-07":0.77,"2025-06":0.81,"2025-05":0.8,"2025-04":0.67,"2025-03":0.79,"2025-02":0.81,"2025-01":0.7,"2024-12":0.74,"2024-11":0.84,"2024-10":0.86,"2024-09":0.83,"2024-08":0.82,"2024-07":0.82,"2024-06":0.84,"2024-05":0.81,"2024-04":0.92,"2024-03":0.95,"2024-02":0.95,"2024-01":0.92,"2023-12":0.93,"2023-11":1.07,"2023-10":1.08,"2023-08":0.83,"2023-07":1.13,"2023-06":1.03,"2023-05":0.92,"2023-04":0.95,"2023-03":0.96,"2023-02":0.91,"2023-01":0.8},"atual":{"mes":"2026-03","ipk":0.87,"pagantes":34803,"gratuidade":9157,"total_pass":43960,"receita":495159.27,"km_total":40040.0}},{"linha":"5298","nome":"Cidade de Confins / Terminal Vilarinho","grupo":"METROPOLITANO","km":29.5,"ipk":{"2026-03":0.37,"2026-02":0.46,"2026-01":0.48,"2025-12":0.42,"2025-11":0.45,"2025-10":0.51,"2025-09":0.51,"2025-08":0.49,"2025-07":0.42,"2025-06":0.46,"2025-05":0.41,"2025-04":1.39,"2025-03":0.42,"2025-02":0.58,"2025-01":0.49,"2024-12":0.38,"2024-11":0.44,"2024-10":0.48,"2024-09":0.46,"2024-08":0.5,"2024-07":0.52,"2024-06":0.49,"2024-05":0.51,"2024-04":0.55,"2024-03":0.49,"2024-02":0.53,"2024-01":0.8,"2023-12":0.53,"2023-11":0.57,"2023-10":0.69,"2023-08":0.73,"2023-07":0.85,"2023-06":0.63,"2023-05":0.65,"2023-04":0.62,"2023-03":0.63,"2023-02":0.47,"2023-01":0.64},"atual":{"mes":"2026-03","ipk":0.37,"pagantes":1824,"gratuidade":544,"total_pass":2368,"receita":22886.46,"km_total":4985.5}},{"linha":"5302","nome":"Cidade de Confins / Terminal Vilarinho via Aeroporto","grupo":"METROPOLITANO","km":38.8,"ipk":{"2026-03":0.39,"2026-02":0.32,"2026-01":0.3,"2025-12":0.3,"2025-11":0.29,"2025-10":0.36,"2025-09":0.37,"2025-08":0.34,"2025-07":0.34,"2025-06":0.33,"2025-05":0.32,"2025-04":0.59,"2025-03":0.32,"2025-02":0.3,"2025-01":0.29,"2024-12":0.29,"2024-11":0.31,"2024-10":0.33,"2024-09":0.31,"2024-08":0.33,"2024-07":0.32,"2024-06":0.32,"2024-05":0.32,"2024-04":0.35,"2024-03":0.33,"2024-02":0.34,"2024-01":0.29,"2023-12":0.34,"2023-11":0.32,"2023-10":0.29,"2023-08":0.3,"2023-07":0.32,"2023-06":0.3,"2023-05":0.3,"2023-04":0.32,"2023-03":0.3,"2023-02":0.3,"2023-01":0.33},"atual":{"mes":"2026-03","ipk":0.39,"pagantes":1864,"gratuidade":192,"total_pass":2056,"receita":26704.36,"km_total":4772.4}},{"linha":"5303","nome":"Cachoeira / Lagoa Santa","grupo":"METROPOLITANO","km":80.2,"ipk":{"2026-03":0.63,"2026-02":0.58,"2026-01":0.59,"2025-12":0.62,"2025-11":0.62,"2025-10":0.62,"2025-09":0.63,"2025-08":0.64,"2025-07":0.64,"2025-06":0.64,"2025-05":0.64,"2025-04":1.16,"2025-03":0.66,"2025-02":0.71,"2025-01":0.64,"2024-12":0.61,"2024-11":0.69,"2024-10":0.72,"2024-09":0.69,"2024-08":0.75,"2024-07":0.76,"2024-06":0.76,"2024-05":0.8,"2024-04":0.84,"2024-03":0.78,"2024-02":0.83,"2024-01":0.78,"2023-12":1.07,"2023-11":1.67,"2023-10":0.77,"2023-08":1.62,"2023-07":0.84,"2023-06":1.21,"2023-05":0.76,"2023-04":1.18,"2023-03":0.9,"2023-02":0.91,"2023-01":0.86},"atual":{"mes":"2026-03","ipk":0.63,"pagantes":10926,"gratuidade":1034,"total_pass":11960,"receita":97340.89,"km_total":17403.4}},{"linha":"5304","nome":"Cachoeira / Aeroporto de Confins via Retiro / Lag. dos Mares","grupo":"METROPOLITANO","km":32.35,"ipk":{"2026-03":0.32,"2026-02":0.29,"2026-01":0.28,"2025-12":0.29,"2025-11":0.27,"2025-10":0.27,"2025-09":0.3,"2025-08":0.28,"2025-07":0.3,"2025-06":0.34,"2025-05":0.34,"2025-04":0.62,"2025-03":0.58,"2025-02":0.78,"2025-01":0.37,"2024-12":0.53,"2024-11":0.77,"2024-10":0.59,"2024-09":0.42,"2024-08":0.44,"2024-07":0.56,"2024-06":0.45,"2024-05":0.67,"2024-04":0.74,"2024-03":0.75,"2024-02":0.67,"2024-01":0.71,"2023-12":0.68,"2023-11":0.74,"2023-10":0.8,"2023-08":0.81,"2023-07":0.75,"2023-06":0.92,"2023-05":0.9,"2023-04":0.89,"2023-03":0.88,"2023-02":0.71,"2023-01":0.73},"atual":{"mes":"2026-03","ipk":0.32,"pagantes":674,"gratuidade":62,"total_pass":736,"receita":6001.01,"km_total":2135.1}},{"linha":"5305","nome":"Vespasiano / Cachoeira via Nova Granja","grupo":"METROPOLITANO","km":25.7,"ipk":{"2026-03":1.23,"2026-02":1.05,"2026-01":0.59,"2025-12":1.14,"2025-11":1.26,"2025-10":1.18,"2025-09":1.32,"2025-08":1.44,"2025-07":1.42,"2025-06":1.35,"2025-05":1.31,"2025-04":1.39,"2025-03":1.18,"2025-02":1.46,"2025-01":1.28,"2024-12":1.15,"2024-11":1.27,"2024-10":1.26,"2024-09":1.21,"2024-08":1.3,"2024-07":1.47,"2024-06":1.58,"2024-05":1.6,"2024-04":2.04,"2024-03":1.97,"2024-02":1.92,"2024-01":1.69,"2023-12":1.58,"2023-11":2.06,"2023-10":1.98,"2023-08":2.02,"2023-07":1.82,"2023-06":2.07,"2023-05":1.01,"2023-04":2.38,"2023-03":2.43,"2023-02":2.9,"2023-01":1.96},"atual":{"mes":"2026-03","ipk":1.23,"pagantes":824,"gratuidade":83,"total_pass":907,"receita":7263.05,"km_total":668.2}},{"linha":"5307","nome":"Vespasiano / Maravilha / Inacia de Carvalho","grupo":"METROPOLITANO","km":40.3,"ipk":{"2026-03":0.58,"2026-02":0.47,"2026-01":0.42,"2025-12":0.47,"2025-11":0.57,"2025-10":0.57,"2025-09":0.6,"2025-08":0.58,"2025-07":0.6,"2025-06":0.61,"2025-05":0.56,"2025-04":0.59,"2025-03":0.52,"2025-02":0.64,"2025-01":0.59,"2024-12":0.44,"2024-11":0.63,"2024-10":0.64,"2024-09":0.66,"2024-08":0.71,"2024-07":0.67,"2024-06":0.78,"2024-05":0.75,"2024-04":0.89,"2024-03":0.84,"2024-02":0.83,"2024-01":0.62,"2023-12":0.63,"2023-11":0.97,"2023-10":0.88,"2023-08":1.03,"2023-07":1.01,"2023-06":1.01,"2023-05":1.64,"2023-04":0.97,"2023-03":1.13,"2023-02":0.82,"2023-01":0.87},"atual":{"mes":"2026-03","ipk":0.58,"pagantes":2600,"gratuidade":701,"total_pass":3301,"receita":23160.71,"km_total":4513.6}},{"linha":"5308","nome":"Dom Pedro I / Terminal Vilarinho","grupo":"METROPOLITANO","km":42.9,"ipk":{"2026-03":1.48,"2026-02":1.31,"2026-01":1.34,"2025-12":1.24,"2025-11":1.39,"2025-10":1.39,"2025-09":1.44,"2025-08":1.43,"2025-07":1.11,"2025-06":1.1,"2025-05":1.08,"2025-04":1.16,"2025-03":1.09,"2025-02":1.22,"2025-01":1.08,"2024-12":0.97,"2024-11":1.2,"2024-10":1.24,"2024-09":1.21,"2024-08":1.22,"2024-07":1.21,"2024-06":1.31,"2024-05":1.31,"2024-04":1.34,"2024-03":1.28,"2024-02":1.26,"2024-01":1.27,"2023-12":1.22,"2023-11":1.61,"2023-10":1.64,"2023-08":1.56,"2023-07":1.56,"2023-06":1.51,"2023-05":0.65,"2023-04":1.52,"2023-03":1.58,"2023-02":1.42,"2023-01":1.31},"atual":{"mes":"2026-03","ipk":1.48,"pagantes":11843,"gratuidade":1442,"total_pass":13285,"receita":88278.17,"km_total":8000.85}},{"linha":"5313","nome":"Cachoeira / Aerop. de Confins via Tavares","grupo":"METROPOLITANO","km":27.5,"ipk":{"2026-03":0.67,"2026-02":0.61,"2026-01":0.71,"2025-12":0.59,"2025-11":0.62,"2025-10":0.62,"2025-09":0.65,"2025-08":0.64,"2025-07":0.57,"2025-06":0.63,"2025-05":0.6},"atual":{"mes":"2026-03","ipk":0.67,"pagantes":807,"gratuidade":26,"total_pass":833,"receita":7142.19,"km_total":1210.0}}]};
+
+const LINHAS = RAW.linhas;
+const META   = RAW.meta;
+
+const MONTHS_2026 = ['2026-03','2026-02','2026-01'];
+const MONTHS_2025 = ['2025-12','2025-11','2025-10','2025-09','2025-08','2025-07','2025-06','2025-05','2025-04','2025-03','2025-02','2025-01'];
+const ALL_MONTHS_REV = [...MONTHS_2026, ...MONTHS_2025,
+  '2024-12','2024-11','2024-10','2024-09','2024-08','2024-07','2024-06','2024-05','2024-04','2024-03','2024-02','2024-01',
+  '2023-12','2023-11','2023-10','2023-09','2023-08','2023-07','2023-06','2023-05','2023-04','2023-03','2023-02','2023-01'
+];
+
+const GRP_ORDER = {'RODOVIÁRIO':0,'MUNICIPAL VESPASIANO':1,'MUNICIPAL PEDRO LEOPOLDO':2,'METROPOLITANO':3};
+const GRP_COLOR = {
+  'RODOVIÁRIO':       {bg:'#F3E8FF',fg:'#6B21A8',dot:'#9333EA'},
+  'MUNICIPAL VESPASIANO': {bg:'#E0F2FE',fg:'#075985',dot:'#0284C7'},
+  'MUNICIPAL PEDRO LEOPOLDO': {bg:'#DCFCE7',fg:'#166534',dot:'#16A34A'},
+  'METROPOLITANO':    {bg:'#FEF3C7',fg:'#92400E',dot:'#D97706'},
+};
+
+const LINE_COLORS = ['#2B3A8C','#E8711A','#16A34A','#7C3AED'];
+
+let periodLen = 15;
+let rkSortKey = 'ipk_atual';
+let rkSortDir = -1;
+
+// ── HELPERS ──
+function fmtIPK(v) { return v != null ? v.toFixed(2) : '—'; }
+function fmtN(n)   { return n != null ? Math.round(n).toLocaleString('pt-BR') : '—'; }
+function fmtR(n)   { return n != null ? 'R$ ' + n.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—'; }
+
+function ipkClass(v) {
+  if (v == null) return 'ipk-nd';
+  if (v >= 1.2)  return 'ipk-ok';
+  if (v >= 1.0)  return 'ipk-meta';
+  return 'ipk-wn';
+}
+function ipkPill(v) {
+  if (v == null) return '<span class="pill p-gy">S/ dados</span>';
+  if (v >= 1.2)  return '<span class="pill p-ok">Saudável</span>';
+  if (v >= 1.0)  return '<span class="pill p-meta">Na meta</span>';
+  return '<span class="pill p-wn">Abaixo</span>';
+}
+function barColor(v) {
+  if (v == null) return '#E5E7EB';
+  if (v >= 1.2) return '#16A34A';
+  if (v >= 1.0) return '#F59E0B';
+  return '#DC2626';
+}
+
+function mlabel(m) {
+  const [y, mo] = m.split('-');
+  const months = ['','JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+  return months[+mo] + '/' + y.slice(2);
+}
+
+function getMonthsForPeriod(len) {
+  return ALL_MONTHS_REV.slice(0, len).filter(m => META.meses_disponiveis.includes(m));
+}
+
+// ── TAB SWITCH ──
+function tab(id, btn) {
+  document.querySelectorAll('.tp').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'analise')   renderAnalise();
+  if (id === 'ranking')   renderRanking();
+  if (id === 'historico') renderHistorico();
+}
+
+// ══════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════
+function renderDashboard() {
+  const atual = '2026-03';
+  const ant   = '2026-02';
+
+  const comIPK    = LINHAS.filter(l => l.ipk[atual] != null);
+  const saudaveis = comIPK.filter(l => l.ipk[atual] >= 1.2).length;
+  const na_meta   = comIPK.filter(l => l.ipk[atual] >= 1.0 && l.ipk[atual] < 1.2).length;
+  const abaixo    = comIPK.filter(l => l.ipk[atual] < 1.0).length;
+  const sem_dado  = LINHAS.filter(l => l.ipk[atual] == null).length;
+
+  // KPIs
+  const kg = document.getElementById('kpi-grid');
+  const kdata = [
+    {l:'Total de Linhas',   v: LINHAS.length, u:'',  s:'No sistema',         c:'var(--az)'},
+    {l:'Linhas Saudáveis',  v: saudaveis,     u:'',  s:'IPK ≥ 1,2 no mês',   c:'var(--ok)'},
+    {l:'Na Meta Mínima',    v: na_meta,       u:'',  s:'IPK entre 1,0 e 1,2', c:'#D97706'},
+    {l:'Abaixo da Meta',    v: abaixo,        u:'',  s:'IPK < 1,0',           c:'var(--wn)'},
+    {l:'Sem Dados',         v: sem_dado,      u:'',  s:'Sem registro no mês', c:'var(--t3)'},
+  ];
+  kg.innerHTML = kdata.map(k =>
+    `<div class="kpi" style="--kc:${k.c}">
+      <div class="kl">${k.l}</div>
+      <div class="kv" style="color:${k.c}">${k.v}<span class="u">${k.u}</span></div>
+      <div class="ks">${k.s}</div>
+    </div>`
+  ).join('');
+
+  // Bar chart — all lines sorted by IPK desc
+  const sorted = [...LINHAS]
+    .filter(l => l.ipk[atual] != null)
+    .sort((a, b) => (b.ipk[atual] || 0) - (a.ipk[atual] || 0));
+
+  const maxIPK = Math.max(...sorted.map(l => l.ipk[atual] || 0), 1.5);
+  const metaPct = (1.0 / maxIPK * 100).toFixed(1);
+
+  let html = `<div class="bar-chart-wrap">`;
+
+  let lastGrp = null;
+  sorted.forEach(l => {
+    if (l.grupo !== lastGrp) {
+      lastGrp = l.grupo;
+      const gc = GRP_COLOR[l.grupo];
+      html += `<div style="padding:6px 0 3px;font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:${gc.fg}">${l.grupo}</div>`;
+    }
+    const v = l.ipk[atual];
+    const pct = (v / maxIPK * 100).toFixed(1);
+    const cl = barColor(v);
+    html += `
+      <div class="bar-row">
+        <div class="bar-label">${l.linha}</div>
+        <div class="bar-name" title="${l.nome}">${l.nome}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${pct}%;background:${cl}"></div>
+          <div class="meta-mark" style="left:${metaPct}%" title="Meta 1,0"></div>
+        </div>
+        <div class="bar-val" style="color:${cl}">${v.toFixed(2)}</div>
+      </div>`;
+  });
+  html += `<div style="font-size:10px;color:var(--t3);margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)">
+    │ Linha vertical = meta mínima IPK 1,0</div>`;
+  html += `</div>`;
+  document.getElementById('dash-bars').innerHTML = html;
+}
+
+// ══════════════════════════════════════════
+// ANÁLISE POR LINHA
+// ══════════════════════════════════════════
+let chartIPK = null;
+
+function buildLineSelectors() {
+  const opts = LINHAS.map(l => `<option value="${l.linha}">${l.linha} — ${l.nome}</option>`).join('');
+  document.getElementById('sel1').innerHTML = opts;
+  document.getElementById('sel2').innerHTML = '<option value="">— Nenhuma —</option>' + opts;
+  document.getElementById('sel3').innerHTML = '<option value="">— Nenhuma —</option>' + opts;
+  const good = LINHAS.find(l => l.ipk['2026-03'] != null && l.ipk['2026-03'] >= 1.0);
+  if (good) document.getElementById('sel1').value = good.linha;
+}
+
+function setPeriod(len, btn) {
+  periodLen = len;
+  document.querySelectorAll('.pbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAnalise();
+}
+
+function makeChartIPK(canvasId, existing, labels, datasets) {
+  if (existing) existing.destroy();
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  return new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          bodyFont: { family: 'DM Mono' },
+          callbacks: {
+            label: ctx => {
+              const label = ctx.dataset.label;
+              const val   = ctx.parsed.y;
+              if (label === 'Meta') return `Meta: ${val.toFixed(2)}`;
+              return `${label}: ${val != null ? val.toFixed(2) : '—'}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { font: { size: 10 }, color: '#9198B4' }, grid: { color: '#F3F4F8' } },
+        y: { min: 0, ticks: { font: { family: 'DM Mono', size: 10 }, color: '#9198B4' }, grid: { color: '#F3F4F8' } }
+      }
+    }
+  });
+}
+
+function renderAnalise() {
+  const ids = [
+    document.getElementById('sel1').value,
+    document.getElementById('sel2').value,
+    document.getElementById('sel3').value,
+  ].filter(Boolean);
+
+  const months       = getMonthsForPeriod(periodLen);
+  const labels       = months.map(mlabel).reverse();
+  const monthsOrdered = [...months].reverse(); // oldest → newest for chart x-axis
+
+  // Legend
+  document.getElementById('analise-leg').innerHTML = ids.map((id, i) => {
+    const l = LINHAS.find(x => x.linha === id);
+    return l ? `<div class="leg-item"><div class="leg-dot" style="background:${LINE_COLORS[i]}"></div><strong>${l.linha}</strong> ${l.nome}</div>` : '';
+  }).join('');
+
+  // IPK datasets
+  const ipkDatasets = ids.map((id, i) => {
+    const l = LINHAS.find(x => x.linha === id);
+    if (!l) return null;
+    return {
+      label: l.linha,
+      data: monthsOrdered.map(m => l.ipk[m] ?? null),
+      borderColor: LINE_COLORS[i],
+      backgroundColor: LINE_COLORS[i] + '12',
+      borderWidth: 2.5,
+      pointRadius: 3,
+      pointHoverRadius: 5,
+      tension: 0.3,
+      fill: i === 0,
+      spanGaps: false,
+    };
+  }).filter(Boolean);
+
+  // Meta line — label is just "Meta" so tooltip shows "Meta: 1,00"
+  ipkDatasets.push({
+    label: 'Meta',
+    data: monthsOrdered.map(() => 1.0),
+    borderColor: '#F59E0B',
+    borderWidth: 1.5,
+    borderDash: [6, 4],
+    pointRadius: 0,
+    fill: false,
+  });
+
+  chartIPK = makeChartIPK('chart-ipk', chartIPK, labels, ipkDatasets);
+
+  // ── Info cards (mês atual) ──
+  const cards = document.getElementById('analise-cards');
+  if (!ids.length) { cards.innerHTML = ''; return; }
+
+  const cardHTML = ids.map((id, i) => {
+    const l = LINHAS.find(x => x.linha === id);
+    if (!l) return '';
+    const a   = l.atual || {};
+    const ipk = l.ipk['2026-03'];
+    const dot = LINE_COLORS[i];
+
+    return `<div class="chart-box" style="border-top:3px solid ${dot}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <div style="width:10px;height:10px;border-radius:50%;background:${dot};flex-shrink:0"></div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--tx)">${l.linha} — ${l.nome}</div>
+          <div style="font-size:10px;color:var(--t3)">Dados de Março 2026 · ${l.grupo}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:var(--bg);border-radius:8px;padding:10px 12px">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);font-weight:600;margin-bottom:4px">IPK</div>
+          <div style="font-size:22px;font-weight:700;font-family:'DM Mono',monospace;color:${ipk==null?'var(--t3)':ipk>=1.2?'var(--ok)':ipk>=1.0?'#D97706':'var(--wn)'}">${ipk != null ? ipk.toFixed(2) : '—'}</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:2px">Meta: 1,00</div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:10px 12px">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);font-weight:600;margin-bottom:4px">KM Linha</div>
+          <div style="font-size:18px;font-weight:700;font-family:'DM Mono',monospace;color:var(--tx)">${l.km != null ? l.km.toFixed(1) : '—'}</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:2px">km de extensão</div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:10px 12px">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);font-weight:600;margin-bottom:4px">Passageiros</div>
+          <div style="font-size:18px;font-weight:700;font-family:'DM Mono',monospace;color:var(--az)">${a.total_pass != null ? a.total_pass.toLocaleString('pt-BR') : '—'}</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:2px">total no mês</div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:10px 12px">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);font-weight:600;margin-bottom:4px">Receita</div>
+          <div style="font-size:15px;font-weight:700;font-family:'DM Mono',monospace;color:var(--or)">${a.receita != null ? 'R$ ' + a.receita.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—'}</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:2px">no mês</div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:10px 12px">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);font-weight:600;margin-bottom:4px">KM Total Mês</div>
+          <div style="font-size:18px;font-weight:700;font-family:'DM Mono',monospace;color:var(--tx)">${a.km_total != null ? a.km_total.toLocaleString('pt-BR', {maximumFractionDigits:0}) : '—'}</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:2px">km rodados</div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:10px 12px">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);font-weight:600;margin-bottom:4px">Gratuidade</div>
+          <div style="font-size:18px;font-weight:700;font-family:'DM Mono',monospace;color:var(--t2)">${a.gratuidade != null ? a.gratuidade.toLocaleString('pt-BR') : '—'}</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:2px">passageiros</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  cards.innerHTML = cardHTML;
+}
+
+// ══════════════════════════════════════════
+// RANKING & ALERTAS
+// ══════════════════════════════════════════
+function consecDecline(l, n = 2) {
+  // Check if last n months show consecutive decline vs previous
+  const months = ALL_MONTHS_REV.slice(0, n + 1);
+  const vals = months.map(m => l.ipk[m]).filter(v => v != null);
+  if (vals.length < n + 1) return false;
+  for (let i = 0; i < n; i++) {
+    if (vals[i] >= vals[i + 1]) return false;
+  }
+  return true;
+}
+
+function rkSort(key) {
+  if (rkSortKey === key) rkSortDir *= -1;
+  else { rkSortKey = key; rkSortDir = -1; }
+  document.querySelectorAll('thead th').forEach(th => th.classList.remove('sorted'));
+  renderRanking();
+}
+
+function sparkline(l, nMonths = 6) {
+  const vals = ALL_MONTHS_REV.slice(0, nMonths).reverse().map(m => l.ipk[m]);
+  const max = Math.max(...vals.filter(v => v != null), 1);
+  return vals.map(v => {
+    const h = v != null ? Math.max(3, Math.round((v / max) * 16)) : 2;
+    const c = v == null ? '#E5E7EB' : v >= 1.2 ? '#16A34A' : v >= 1.0 ? '#F59E0B' : '#DC2626';
+    return `<span style="height:${h}px;background:${c}"></span>`;
+  }).join('');
+}
+
+function renderRanking() {
+  const q     = document.getElementById('rk-search').value.toLowerCase();
+  const grp   = document.getElementById('rk-grupo').value;
+  const stFlt = document.getElementById('rk-status').value;
+  const atual = '2026-03';
+  const ant   = '2026-02';
+
+  let rows = LINHAS.map(l => ({
+    ...l,
+    ipk_atual: l.ipk[atual] ?? null,
+    ipk_ant:   l.ipk[ant]   ?? null,
+    alerta:    consecDecline(l, 2),
+  })).filter(l => {
+    if (q && !l.linha.includes(q) && !l.nome.toLowerCase().includes(q)) return false;
+    if (grp && l.grupo !== grp) return false;
+    const v = l.ipk_atual;
+    if (stFlt === 'ok'    && !(v != null && v >= 1.2)) return false;
+    if (stFlt === 'meta'  && !(v != null && v >= 1.0 && v < 1.2)) return false;
+    if (stFlt === 'baixo' && !(v != null && v < 1.0)) return false;
+    if (stFlt === 'alerta' && !l.alerta) return false;
+    return true;
+  });
+
+  rows.sort((a, b) => {
+    let av = a[rkSortKey], bv = b[rkSortKey];
+    if (av == null) av = -9999; if (bv == null) bv = -9999;
+    return typeof av === 'string' ? av.localeCompare(bv) * rkSortDir : (av - bv) * rkSortDir;
+  });
+
+  document.getElementById('rk-cnt').textContent = rows.length + ' linhas';
+
+  // Alert banner
+  const alerts = rows.filter(l => l.alerta);
+  const az = document.getElementById('alert-zone');
+  if (alerts.length) {
+    az.innerHTML = `<div class="alert-banner">
+      <strong>🚨 ${alerts.length} linha(s) em queda consecutiva</strong>
+      IPK caindo nos últimos 2 meses seguidos: ${alerts.map(l => `<strong>${l.linha}</strong>`).join(', ')}
+    </div>`;
+  } else {
+    az.innerHTML = '';
+  }
+
+  const tb = document.getElementById('rk-body');
+  let html = '';
+  let lastGrp = null;
+
+  rows.forEach(l => {
+    if (l.grupo !== lastGrp) {
+      lastGrp = l.grupo;
+      const gc = GRP_COLOR[l.grupo];
+      html += `<tr class="sep-row"><td colspan="9" style="color:${gc.fg};font-size:10px;font-weight:700;letter-spacing:.5px">
+        <span style="background:${gc.bg};padding:2px 10px;border-radius:4px">${l.grupo}</span></td></tr>`;
+    }
+    const v  = l.ipk_atual;
+    const vp = l.ipk_ant;
+    const delta = (v != null && vp != null) ? +(v - vp).toFixed(2) : null;
+    const dCls = delta == null ? '' : delta > 0 ? 'color:var(--ok);font-weight:600' : delta < 0 ? 'color:var(--wn);font-weight:600' : 'color:var(--t3)';
+    const dStr = delta == null ? '—' : (delta > 0 ? '+' : '') + delta.toFixed(2);
+
+    html += `<tr>
+      <td class="tf2">${l.linha}</td>
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis">${l.nome}</td>
+      <td><span style="background:${GRP_COLOR[l.grupo].bg};color:${GRP_COLOR[l.grupo].fg};padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700">${l.grupo.split(' ')[0]}</span></td>
+      <td class="${ipkClass(v)}">${fmtIPK(v)}</td>
+      <td class="${ipkClass(vp)}">${fmtIPK(vp)}</td>
+      <td style="${dCls};font-family:'DM Mono',monospace;font-size:11px">${dStr}</td>
+      <td><div class="spark">${sparkline(l)}</div></td>
+      <td>${ipkPill(v)}</td>
+      <td>${l.alerta ? '<span class="pill p-alert">⚠ Queda</span>' : '<span style="color:var(--t3);font-size:11px">—</span>'}</td>
+    </tr>`;
+  });
+
+  tb.innerHTML = html;
+}
+
+// ══════════════════════════════════════════
+// HISTÓRICO COMPLETO
+// ══════════════════════════════════════════
+function renderHistorico() {
+  const q = document.getElementById('ht-search').value.toLowerCase();
+  const linhas = LINHAS.filter(l => !q || l.linha.includes(q) || l.nome.toLowerCase().includes(q));
+
+  // Columns: LINHA | NOME | MAR/26 FEV/26 JAN/26 | DEZ/25…JAN/25 | 2024MÉD | 2023MÉD
+  const cols2026 = MONTHS_2026;
+  const cols2025 = MONTHS_2025;
+
+  function avg(l, yr) {
+    const vals = Object.entries(l.ipk).filter(([m]) => m.startsWith(yr)).map(([,v]) => v);
+    if (!vals.length) return null;
+    return +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2);
+  }
+
+  function cellStyle(v) {
+    if (v == null) return 'class="ci-nd"';
+    if (v >= 1.2)  return 'class="ci-ok"';
+    if (v >= 1.0)  return 'class="ci-meta"';
+    return 'class="ci-wn"';
+  }
+
+  // Build header
+  let thead = `<thead><tr>
+    <th>Linha</th><th>Nome</th>
+    ${cols2026.map(m => `<th class="yr-26">${mlabel(m)}</th>`).join('')}
+    ${cols2025.map(m => `<th class="yr-25">${mlabel(m)}</th>`).join('')}
+    <th class="yr-avg">2024<br>méd.</th>
+    <th class="yr-avg2">2023<br>méd.</th>
+  </tr></thead>`;
+
+  let tbody = '<tbody>';
+  let lastGrp = null;
+
+  linhas.forEach(l => {
+    if (l.grupo !== lastGrp) {
+      lastGrp = l.grupo;
+      const gc = GRP_COLOR[l.grupo];
+      const totalCols = 2 + cols2026.length + cols2025.length + 2;
+      tbody += `<tr class="sep-hist"><td colspan="${totalCols}" style="color:${gc.fg}">▌ ${l.grupo}</td></tr>`;
+    }
+    const avg24 = avg(l, '2024');
+    const avg23 = avg(l, '2023');
+    tbody += `<tr>
+      <td>${l.linha}</td>
+      <td>${l.nome}</td>
+      ${cols2026.map(m => {
+        const v = l.ipk[m];
+        return `<td ${cellStyle(v)}>${v != null ? v.toFixed(2) : '—'}</td>`;
+      }).join('')}
+      ${cols2025.map(m => {
+        const v = l.ipk[m];
+        return `<td ${cellStyle(v)}>${v != null ? v.toFixed(2) : '—'}</td>`;
+      }).join('')}
+      <td ${cellStyle(avg24)}>${avg24 != null ? avg24.toFixed(2) : '—'}</td>
+      <td ${cellStyle(avg23)}>${avg23 != null ? avg23.toFixed(2) : '—'}</td>
+    </tr>`;
+  });
+  tbody += '</tbody>';
+
+  document.getElementById('ht-table').innerHTML = thead + tbody;
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+renderDashboard();
+buildLineSelectors();
+</script>
+</body>
+</html>
